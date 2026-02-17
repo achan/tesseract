@@ -6,10 +6,10 @@ Built on Supabase (Edge Functions + Postgres) and the Slack Events API with user
 ## Overview
 
 ```
-┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
 │  Workspace A │   │  Workspace B │   │  Workspace C │
 │  (user token)│   │  (user token)│   │  (user token)│
-└──────┬───────┘   └──────┬───────┘   └──────┬───────┘
+└──────┬───────┘   └───────┬──────┘   └───────┬──────┘
        │  Events API       │                  │
        └──────────────┬────┴──────────────────┘
                       ▼
@@ -74,17 +74,17 @@ for channels we don't care about.
 
 ### Event Subscriptions
 
-| Event                      | What it captures           |
-| -------------------------- | -------------------------- |
-| `message.channels`         | Messages in public channels |
+| Event                      | What it captures             |
+| -------------------------- | ---------------------------- |
+| `message.channels`         | Messages in public channels  |
 | `message.groups`           | Messages in private channels |
-| `reaction_added`           | Emoji reactions added       |
-| `reaction_removed`         | Emoji reactions removed     |
-| `member_joined_channel`    | Members joining channels    |
-| `member_left_channel`      | Members leaving channels    |
-| `pin_added`                | Pinned items                |
-| `pin_removed`              | Unpinned items              |
-| `file_shared`              | File uploads                |
+| `reaction_added`           | Emoji reactions added        |
+| `reaction_removed`         | Emoji reactions removed      |
+| `member_joined_channel`    | Members joining channels     |
+| `member_left_channel`      | Members leaving channels     |
+| `pin_added`                | Pinned items                 |
+| `pin_removed`              | Unpinned items               |
+| `file_shared`              | File uploads                 |
 
 ---
 
@@ -94,46 +94,46 @@ for channels we don't care about.
 
 Stores one row per Slack workspace installation.
 
-| Column           | Type        | Notes                          |
-| ---------------- | ----------- | ------------------------------ |
-| `id`             | uuid (PK)   | Generated                      |
-| `team_id`        | text UNIQUE | Slack workspace ID             |
-| `team_name`      | text        | Human-readable name            |
-| `user_token`     | text        | Encrypted `xoxp-` token        |
-| `signing_secret` | text        | Per-app (same for all rows)    |
-| `created_at`     | timestamptz | Default `now()`                |
+| Column             | Type        | Notes                              |
+| ------------------ | ----------- | ---------------------------------- |
+| `id`               | uuid (PK)   | Generated                          |
+| `team_id`          | text UNIQUE | Slack workspace ID                 |
+| `team_name`        | text        | Human-readable name                |
+| `user_token`       | text        | Encrypted `xoxp-` token            |
+| `signing_secret`   | text        | Per-app (same for all rows)        |
+| `created_at`       | timestamptz | Default `now()`                    |
 
 ### `channels`
 
 Configures which channels to track per workspace.
 
-| Column         | Type        | Notes                          |
-| -------------- | ----------- | ------------------------------ |
-| `id`           | uuid (PK)   | Generated                      |
-| `workspace_id` | uuid (FK)   | → `workspaces.id`             |
-| `channel_id`   | text        | Slack channel ID               |
-| `channel_name` | text        | Human-readable name            |
-| `active`       | boolean     | Toggle tracking on/off         |
-| `created_at`   | timestamptz | Default `now()`                |
+| Column             | Type        | Notes                              |
+| ------------------ | ----------- | ---------------------------------- |
+| `id`               | uuid (PK)   | Generated                          |
+| `workspace_id`     | uuid (FK)   | → `workspaces.id`                 |
+| `channel_id`       | text        | Slack channel ID                   |
+| `channel_name`     | text        | Human-readable name                |
+| `active`           | boolean     | Toggle tracking on/off             |
+| `created_at`       | timestamptz | Default `now()`                    |
 
 Unique constraint: `(workspace_id, channel_id)`.
 
 ### `events`
 
-Append-only raw event storage. This is the core table.
+Raw event storage. Rows older than 3 days are purged nightly.
 
-| Column         | Type        | Notes                          |
-| -------------- | ----------- | ------------------------------ |
-| `id`           | uuid (PK)   | Generated                      |
-| `workspace_id` | uuid (FK)   | → `workspaces.id`             |
-| `event_id`     | text UNIQUE | Slack event ID (dedup key)     |
-| `channel_id`   | text        | Slack channel ID               |
-| `event_type`   | text        | e.g. `message`, `reaction_added` |
-| `user_id`      | text        | Slack user who triggered event |
-| `ts`           | text        | Slack message timestamp        |
-| `thread_ts`    | text        | Parent thread ts (nullable)    |
-| `payload`      | jsonb       | Full raw event object          |
-| `created_at`   | timestamptz | Default `now()`                |
+| Column             | Type        | Notes                              |
+| ------------------ | ----------- | ---------------------------------- |
+| `id`               | uuid (PK)   | Generated                          |
+| `workspace_id`     | uuid (FK)   | → `workspaces.id`                 |
+| `event_id`         | text UNIQUE | Slack event ID (dedup key)         |
+| `channel_id`       | text        | Slack channel ID                   |
+| `event_type`       | text        | e.g. `message`, `reaction_added`   |
+| `user_id`          | text        | Slack user who triggered event     |
+| `ts`               | text        | Slack message timestamp            |
+| `thread_ts`        | text        | Parent thread ts (nullable)        |
+| `payload`          | jsonb       | Full raw event object              |
+| `created_at`       | timestamptz | Default `now()`                    |
 
 Index: `(workspace_id, channel_id, created_at)`.
 
@@ -141,32 +141,32 @@ Index: `(workspace_id, channel_id, created_at)`.
 
 LLM-generated digests for a channel over a time window.
 
-| Column         | Type        | Notes                          |
-| -------------- | ----------- | ------------------------------ |
-| `id`           | uuid (PK)   | Generated                      |
-| `workspace_id` | uuid (FK)   | → `workspaces.id`             |
-| `channel_id`   | text        | Slack channel ID               |
-| `period_start` | timestamptz | Start of summarized window     |
-| `period_end`   | timestamptz | End of summarized window       |
-| `summary_text` | text        | Generated summary              |
-| `model_used`   | text        | e.g. `claude-sonnet-4-5-20250929` |
-| `created_at`   | timestamptz | Default `now()`                |
+| Column             | Type        | Notes                              |
+| ------------------ | ----------- | ---------------------------------- |
+| `id`               | uuid (PK)   | Generated                          |
+| `workspace_id`     | uuid (FK)   | → `workspaces.id`                 |
+| `channel_id`       | text        | Slack channel ID                   |
+| `period_start`     | timestamptz | Start of summarized window         |
+| `period_end`       | timestamptz | End of summarized window           |
+| `summary_text`     | text        | Generated summary                  |
+| `model_used`       | text        | e.g. `claude-sonnet-4-5-20250929`  |
+| `created_at`       | timestamptz | Default `now()`                    |
 
 ### `action_items`
 
 Action items extracted during summarization.
 
-| Column             | Type        | Notes                          |
-| ------------------ | ----------- | ------------------------------ |
-| `id`               | uuid (PK)   | Generated                      |
-| `summary_id`       | uuid (FK)   | → `summaries.id`              |
-| `workspace_id`     | uuid (FK)   | → `workspaces.id`             |
-| `channel_id`       | text        | Slack channel ID               |
-| `description`      | text        | What needs to be done          |
-| `assignee_user_id` | text        | Slack user ID (nullable)       |
-| `source_ts`        | text        | Link to originating message    |
-| `status`           | text        | `open` / `done` / `dismissed` |
-| `created_at`       | timestamptz | Default `now()`                |
+| Column             | Type        | Notes                              |
+| ------------------ | ----------- | ---------------------------------- |
+| `id`               | uuid (PK)   | Generated                          |
+| `summary_id`       | uuid (FK)   | → `summaries.id`                  |
+| `workspace_id`     | uuid (FK)   | → `workspaces.id`                 |
+| `channel_id`       | text        | Slack channel ID                   |
+| `description`      | text        | What needs to be done              |
+| `assignee_user_id` | text        | Slack user ID (nullable)           |
+| `source_ts`        | text        | Link to originating message        |
+| `status`           | text        | `open` / `done` / `dismissed`     |
+| `created_at`       | timestamptz | Default `now()`                    |
 
 ---
 
@@ -206,6 +206,17 @@ Responsibilities:
 3. Respect Slack rate limits (~50 requests/min) with backoff.
 4. Useful when onboarding a new channel or workspace.
 
+### 4. `cleanup` — Stale Data Purge
+
+**Trigger:** Cron schedule (nightly).
+
+Responsibilities:
+1. Delete rows from `events` where `created_at < now() - interval '3 days'`.
+2. Delete rows from `summaries` where `created_at < now() - interval '3 days'`.
+3. Delete rows from `action_items` where `created_at < now() - interval '3 days'`
+   and `status != 'open'` (keep unresolved action items).
+4. Log deleted row counts per table.
+
 ---
 
 ## Important Constraints
@@ -243,7 +254,8 @@ for request verification across all workspace installations.
 6. `summarize` edge function with Claude API
 7. `action_items` extraction
 8. `slack-backfill` function
-9. Install into remaining workspaces
+9. `cleanup` edge function (nightly cron)
+10. Install into remaining workspaces
 
 ---
 
@@ -261,7 +273,9 @@ slack-summary/
 │       │   └── index.ts
 │       ├── summarize/
 │       │   └── index.ts
-│       └── slack-backfill/
+│       ├── slack-backfill/
+│       │   └── index.ts
+│       └── cleanup/
 │           └── index.ts
 └── .env.example
 ```
