@@ -196,17 +196,7 @@ Responsibilities:
 3. Call Claude API with a summarization + action-item-extraction prompt.
 4. Write results to `summaries` and `action_items` tables.
 
-### 3. `slack-backfill` — Historical Import
-
-**Trigger:** Manual / on-demand.
-
-Responsibilities:
-1. Use the user token to call `conversations.history` and `conversations.replies`.
-2. Insert historical messages into the `events` table.
-3. Respect Slack rate limits (~50 requests/min) with backoff.
-4. Useful when onboarding a new channel or workspace.
-
-### 4. `cleanup` — Stale Data Purge
+### 3. `cleanup` — Stale Data Purge
 
 **Trigger:** Cron schedule (nightly).
 
@@ -234,10 +224,6 @@ ensures idempotent inserts (use `ON CONFLICT DO NOTHING`).
 User tokens (`xoxp-`) grant broad access. Store them encrypted using Supabase
 Vault or application-level encryption. Never expose in client-side code or logs.
 
-### Rate limits on backfill
-`conversations.history` is Tier 3 (~50 req/min). The backfill function must
-pace requests and use exponential backoff on `429` responses.
-
 ### Signing secret is per app
 Since all workspaces share one Slack app, there is a single signing secret used
 for request verification across all workspace installations.
@@ -253,7 +239,6 @@ for request verification across all workspace installations.
 5. Channel config + filtering logic
 6. `summarize` edge function with Claude API
 7. `action_items` extraction
-8. `slack-backfill` function
-9. `cleanup` edge function (nightly cron)
-10. Install into remaining workspaces
+8. `cleanup` edge function (nightly cron)
+9. Install into remaining workspaces
 

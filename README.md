@@ -20,7 +20,6 @@ See [schema.mermaid](schema.mermaid) for the full ER diagram.
 | ---------------- | -------------- | ------------------------------------------ |
 | `slack-events`   | HTTP POST      | Receive and store Slack webhook events      |
 | `summarize`      | Cron (daily)   | Generate channel digests and action items   |
-| `slack-backfill` | Manual         | Import historical messages via Slack API    |
 | `cleanup`        | Cron (nightly) | Purge events/summaries older than 3 days   |
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed design decisions, database schema, and constraints.
