@@ -9,7 +9,7 @@
 # - Finds first available port starting from 3000
 # - Creates a tmux session with:
 #   - Window 1 (main): vim (top), console (bottom-left), claude (bottom-right)
-#   - Window 2 (server): Rails dev server on the found port
+#   - Window 2 (server): Procfile.dev processes (web, jobs) on the found port
 
 set -e  # Exit on error
 
@@ -26,7 +26,7 @@ NC='\033[0m' # No Color
 SESSION_NAME=$(basename "$PWD")
 
 # Find first available port starting from 3000
-START_PORT=3000
+START_PORT=6000
 MAX_ATTEMPTS=100
 PORT=""
 
@@ -78,8 +78,8 @@ tmux send-keys -t "$SESSION_NAME":0.2 'claude --dangerously-skip-permissions' C-
 tmux new-window -t "$SESSION_NAME":1
 tmux rename-window -t "$SESSION_NAME":1 server
 
-# Start Rails dev server
-tmux send-keys -t "$SESSION_NAME":1 "bin/rails server -p $PORT" C-m
+# Start Procfile.dev processes (web server, jobs, etc.)
+tmux send-keys -t "$SESSION_NAME":1 "PORT=$PORT bin/dev" C-m
 
 # Select the main window and the vim pane
 tmux select-window -t "$SESSION_NAME":0
