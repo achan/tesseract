@@ -1,0 +1,3 @@
+WORKTREE_CREATE=bin/create-worktree.sh
+WORKTREE_REMOVE=bin/remove-worktree.sh
+WORKTREE_START=bin/start-worktree.sh
