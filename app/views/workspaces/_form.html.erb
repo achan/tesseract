@@ -1,0 +1,36 @@
+<%= form_with(model: workspace) do |f| %>
+  <% if workspace.errors.any? %>
+    <div class="form-errors">
+      <ul>
+        <% workspace.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <%= f.label :team_id, "Team ID" %>
+    <%= f.text_field :team_id, required: true %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :team_name, "Team Name" %>
+    <%= f.text_field :team_name %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :user_token, "User Token" %>
+    <%= f.password_field :user_token, placeholder: workspace.persisted? ? "(unchanged)" : nil %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :signing_secret, "Signing Secret" %>
+    <%= f.password_field :signing_secret, placeholder: workspace.persisted? ? "(unchanged)" : nil %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", root_path, class: "btn" %>
+  </div>
+<% end %>

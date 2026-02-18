@@ -1,22 +1,38 @@
 <% content_for(:title, "Dashboard — Slack Summary") %>
 
 <div class="dashboard">
-  <h2>Workspaces</h2>
+  <div class="dashboard-header">
+    <h2>Workspaces</h2>
+    <%= link_to "Add Workspace", new_workspace_path, class: "btn btn-primary" %>
+  </div>
 
   <% if @workspaces.empty? %>
     <p class="empty-state">No workspaces configured yet. Add a workspace to get started.</p>
   <% else %>
     <% @workspaces.each do |workspace| %>
       <div class="workspace-card">
-        <h3><%= workspace.team_name || workspace.team_id %></h3>
+        <div class="workspace-card-header">
+          <h3><%= workspace.team_name || workspace.team_id %></h3>
+          <div class="workspace-card-actions">
+            <%= link_to "Edit", edit_workspace_path(workspace), class: "btn btn-sm" %>
+            <%= button_to "Delete", workspace_path(workspace), method: :delete,
+                  class: "btn btn-sm btn-dismiss",
+                  data: { turbo_confirm: "Delete this workspace and all its channels?" } %>
+          </div>
+        </div>
         <ul class="channel-grid">
-          <% workspace.channels.active.each do |channel| %>
+          <% workspace.slack_channels.active.each do |channel| %>
             <li>
-              <%= link_to workspace_channel_path(workspace, channel.channel_id), class: "channel-card" do %>
+              <%= link_to workspace_slack_channel_path(workspace, channel), class: "channel-card" do %>
                 <span class="channel-name">#<%= channel.channel_name || channel.channel_id %></span>
               <% end %>
             </li>
           <% end %>
+          <li>
+            <%= link_to new_workspace_slack_channel_path(workspace), class: "channel-card channel-card-add" do %>
+              <span class="channel-name">+ Add Channel</span>
+            <% end %>
+          </li>
         </ul>
       </div>
     <% end %>

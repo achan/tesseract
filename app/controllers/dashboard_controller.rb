@@ -1,5 +1,5 @@
 class DashboardController < ApplicationController
   def show
-    @workspaces = Workspace.includes(:channels).all
+    @workspaces = Workspace.includes(:slack_channels).all
   end
 end

@@ -22,12 +22,12 @@ module Api
       return head :ok unless channel_id
       return head :ok unless workspace.active_channel_ids.include?(channel_id)
 
+      slack_channel = workspace.slack_channels.find_by!(channel_id: channel_id)
       event_id = payload["event_id"]
       return head :ok unless event_id
 
-      Event.create_or_find_by(event_id: event_id) do |e|
-        e.workspace = workspace
-        e.channel_id = channel_id
+      SlackEvent.create_or_find_by(event_id: event_id) do |e|
+        e.slack_channel = slack_channel
         e.event_type = event["type"]
         e.user_id = event["user"]
         e.ts = event["ts"]

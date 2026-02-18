@@ -1,8 +1,8 @@
 class CreateSummaries < ActiveRecord::Migration[8.0]
   def change
     create_table :summaries do |t|
-      t.references :workspace, null: false, foreign_key: true
-      t.text :channel_id, null: false
+      t.text :source_type
+      t.integer :source_id
       t.datetime :period_start
       t.datetime :period_end
       t.text :summary_text
@@ -10,5 +10,7 @@ class CreateSummaries < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
+
+    add_index :summaries, [ :source_type, :source_id ]
   end
 end

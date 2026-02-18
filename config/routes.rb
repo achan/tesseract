@@ -1,8 +1,8 @@
 Rails.application.routes.draw do
   root "dashboard#show"
 
-  resources :workspaces, only: [] do
-    resources :channels, only: :show, param: :id
+  resources :workspaces, except: [:index, :show] do
+    resources :slack_channels
   end
 
   resources :action_items, only: :update

@@ -4,8 +4,7 @@ class ActionItemTest < ActiveSupport::TestCase
   test "validates description presence" do
     item = ActionItem.new(
       summary: summaries(:recent_summary),
-      workspace: workspaces(:one),
-      channel_id: "C_GENERAL",
+      source: slack_channels(:general),
       status: "open"
     )
     assert_not item.valid?
@@ -15,8 +14,7 @@ class ActionItemTest < ActiveSupport::TestCase
   test "validates status inclusion" do
     item = ActionItem.new(
       summary: summaries(:recent_summary),
-      workspace: workspaces(:one),
-      channel_id: "C_GENERAL",
+      source: slack_channels(:general),
       description: "Test",
       status: "invalid"
     )

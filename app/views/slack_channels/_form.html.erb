@@ -1,0 +1,31 @@
+<%= form_with(model: channel, url: channel.persisted? ? workspace_slack_channel_path(workspace, channel) : workspace_slack_channels_path(workspace)) do |f| %>
+  <% if channel.errors.any? %>
+    <div class="form-errors">
+      <ul>
+        <% channel.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <%= f.label :channel_id, "Slack Channel ID" %>
+    <%= f.text_field :channel_id, required: true %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :channel_name, "Channel Name" %>
+    <%= f.text_field :channel_name %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :active %>
+    <%= f.check_box :active %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", root_path, class: "btn" %>
+  </div>
+<% end %>

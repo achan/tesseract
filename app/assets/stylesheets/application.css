@@ -251,6 +251,115 @@ body {
 .btn-done { background: var(--success); color: #fff; }
 .btn-dismiss { background: #e8e8e8; color: var(--text); }
 
+/* Forms */
+.form-container {
+  max-width: 480px;
+}
+
+.form-container h2 { margin-bottom: 1.5rem; }
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(74, 21, 75, 0.15);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.form-errors {
+  background: #fef2f2;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+.form-errors ul { list-style: disc; padding-left: 1.25rem; }
+
+/* Flash notices */
+.flash-notice {
+  background: #f0fdf4;
+  border: 1px solid var(--success);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #166534;
+  font-size: 0.85rem;
+}
+
+/* Dashboard header */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-header h2 { margin-bottom: 0; }
+
+/* Workspace card header */
+.workspace-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.workspace-card-header h3 { margin-bottom: 0; }
+
+.workspace-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Channel header actions */
+.channel-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Add channel card */
+.channel-card-add {
+  border-style: dashed;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.channel-card-add:hover { border-color: var(--primary); color: var(--primary); }
+
+/* Sidebar title link */
+.sidebar-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* Empty state */
 .empty-state {
   color: var(--text-muted);

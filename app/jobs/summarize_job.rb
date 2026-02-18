@@ -3,8 +3,8 @@ class SummarizeJob < ApplicationJob
 
   def perform(workspace_id:, channel_id:, period_start: 24.hours.ago, period_end: Time.current)
     workspace = Workspace.find(workspace_id)
-    events = workspace.events
-      .for_channel(channel_id)
+    channel = workspace.slack_channels.find_by!(channel_id: channel_id)
+    events = channel.slack_events
       .in_window(period_start, period_end)
       .order(:created_at)
 
@@ -17,8 +17,7 @@ class SummarizeJob < ApplicationJob
     parsed = JSON.parse(result_text)
 
     summary = Summary.create!(
-      workspace: workspace,
-      channel_id: channel_id,
+      source: channel,
       period_start: period_start,
       period_end: period_end,
       summary_text: parsed["summary"],
@@ -27,8 +26,7 @@ class SummarizeJob < ApplicationJob
 
     (parsed["action_items"] || []).each do |item|
       summary.action_items.create!(
-        workspace: workspace,
-        channel_id: channel_id,
+        source: channel,
         description: item["description"],
         assignee_user_id: item["assignee"],
         source_ts: item["source_ts"],

@@ -13,34 +13,33 @@
 ActiveRecord::Schema[8.0].define(version: 2026_02_18_174653) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id", null: false
-    t.integer "workspace_id", null: false
-    t.text "channel_id", null: false
+    t.text "source_type"
+    t.integer "source_id"
     t.text "description", null: false
     t.text "assignee_user_id"
     t.text "source_ts"
     t.text "status", default: "open", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["source_type", "source_id"], name: "index_action_items_on_source_type_and_source_id"
     t.index ["status"], name: "index_action_items_on_status"
     t.index ["summary_id"], name: "index_action_items_on_summary_id"
-    t.index ["workspace_id"], name: "index_action_items_on_workspace_id"
   end
 
-  create_table "channels", force: :cascade do |t|
+  create_table "slack_channels", force: :cascade do |t|
     t.integer "workspace_id", null: false
     t.text "channel_id", null: false
     t.text "channel_name"
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["workspace_id", "channel_id"], name: "index_channels_on_workspace_id_and_channel_id", unique: true
-    t.index ["workspace_id"], name: "index_channels_on_workspace_id"
+    t.index ["workspace_id", "channel_id"], name: "index_slack_channels_on_workspace_id_and_channel_id", unique: true
+    t.index ["workspace_id"], name: "index_slack_channels_on_workspace_id"
   end
 
-  create_table "events", force: :cascade do |t|
-    t.integer "workspace_id", null: false
+  create_table "slack_events", force: :cascade do |t|
+    t.integer "slack_channel_id", null: false
     t.text "event_id", null: false
-    t.text "channel_id", null: false
     t.text "event_type"
     t.text "user_id"
     t.text "ts"
@@ -48,21 +47,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_18_174653) do
     t.json "payload"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["event_id"], name: "index_events_on_event_id", unique: true
-    t.index ["workspace_id", "channel_id", "created_at"], name: "index_events_on_workspace_id_and_channel_id_and_created_at"
-    t.index ["workspace_id"], name: "index_events_on_workspace_id"
+    t.index ["event_id"], name: "index_slack_events_on_event_id", unique: true
+    t.index ["slack_channel_id", "created_at"], name: "index_slack_events_on_slack_channel_id_and_created_at"
+    t.index ["slack_channel_id"], name: "index_slack_events_on_slack_channel_id"
   end
 
   create_table "summaries", force: :cascade do |t|
-    t.integer "workspace_id", null: false
-    t.text "channel_id", null: false
+    t.text "source_type"
+    t.integer "source_id"
     t.datetime "period_start"
     t.datetime "period_end"
     t.text "summary_text"
     t.text "model_used"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["workspace_id"], name: "index_summaries_on_workspace_id"
+    t.index ["source_type", "source_id"], name: "index_summaries_on_source_type_and_source_id"
   end
 
   create_table "workspaces", force: :cascade do |t|
@@ -76,8 +75,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_18_174653) do
   end
 
   add_foreign_key "action_items", "summaries"
-  add_foreign_key "action_items", "workspaces"
-  add_foreign_key "channels", "workspaces"
-  add_foreign_key "events", "workspaces"
-  add_foreign_key "summaries", "workspaces"
+  add_foreign_key "slack_channels", "workspaces"
+  add_foreign_key "slack_events", "slack_channels"
 end

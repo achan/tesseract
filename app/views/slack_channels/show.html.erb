@@ -3,11 +3,17 @@
 <div class="channel-detail">
   <header class="channel-header">
     <h2>#<%= @channel.channel_name || @channel.channel_id %></h2>
-    <%= button_to "Generate Summary",
-          api_summaries_generate_path,
-          params: { workspace_id: @workspace.id, channel_id: @channel.channel_id },
-          class: "btn btn-primary",
-          data: { turbo: true } %>
+    <div class="channel-header-actions">
+      <%= link_to "Edit", edit_workspace_slack_channel_path(@workspace, @channel), class: "btn btn-sm" %>
+      <%= button_to "Delete", workspace_slack_channel_path(@workspace, @channel), method: :delete,
+            class: "btn btn-sm btn-dismiss",
+            data: { turbo_confirm: "Delete this channel?" } %>
+      <%= button_to "Generate Summary",
+            api_summaries_generate_path,
+            params: { workspace_id: @workspace.id, channel_id: @channel.channel_id },
+            class: "btn btn-primary",
+            data: { turbo: true } %>
+    </div>
   </header>
 
   <div class="channel-layout">
@@ -29,7 +35,7 @@
         <%= turbo_stream_from "workspace_#{@workspace.id}_channel_#{@channel.channel_id}_events" %>
         <div id="events">
           <% @events.each do |event| %>
-            <%= render "events/event", event: event %>
+            <%= render "slack_events/event", event: event %>
           <% end %>
         </div>
         <% if @events.empty? %>

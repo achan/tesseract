@@ -1,7 +1,6 @@
 open_item:
   summary: recent_summary
-  workspace: one
-  channel_id: C_GENERAL
+  source: general (SlackChannel)
   description: "Review the PR"
   assignee_user_id: U_USER1
   source_ts: "1700000001.000001"
@@ -9,23 +8,20 @@ open_item:
 
 done_item:
   summary: recent_summary
-  workspace: one
-  channel_id: C_GENERAL
+  source: general (SlackChannel)
   description: "Update docs"
   status: done
 
 old_open_item:
   summary: old_summary
-  workspace: one
-  channel_id: C_GENERAL
+  source: general (SlackChannel)
   description: "Old open task"
   status: open
   created_at: <%= 5.days.ago.iso8601 %>
 
 old_done_item:
   summary: old_summary
-  workspace: one
-  channel_id: C_GENERAL
+  source: general (SlackChannel)
   description: "Old done task"
   status: done
   created_at: <%= 5.days.ago.iso8601 %>

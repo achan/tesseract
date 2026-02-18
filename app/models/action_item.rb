@@ -1,9 +1,8 @@
 class ActionItem < ApplicationRecord
   belongs_to :summary
-  belongs_to :workspace
+  belongs_to :source, polymorphic: true
 
   validates :description, presence: true
-  validates :channel_id, presence: true
   validates :status, presence: true, inclusion: { in: %w[open done dismissed] }
 
   scope :open_items, -> { where(status: "open") }
@@ -14,8 +13,10 @@ class ActionItem < ApplicationRecord
   private
 
   def broadcast_append
+    return unless source.is_a?(SlackChannel)
+
     broadcast_append_to(
-      "workspace_#{workspace_id}_channel_#{channel_id}_action_items",
+      "workspace_#{source.workspace_id}_channel_#{source.channel_id}_action_items",
       target: "action_items",
       partial: "action_items/action_item",
       locals: { action_item: self }
@@ -23,8 +24,10 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_replace
+    return unless source.is_a?(SlackChannel)
+
     broadcast_replace_to(
-      "workspace_#{workspace_id}_channel_#{channel_id}_action_items",
+      "workspace_#{source.workspace_id}_channel_#{source.channel_id}_action_items",
       target: dom_id(self),
       partial: "action_items/action_item",
       locals: { action_item: self }

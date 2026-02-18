@@ -1,0 +1,6 @@
+<% content_for(:title, "Edit Channel — #{@channel.channel_name || @channel.channel_id}") %>
+
+<div class="form-container">
+  <h2>Edit Channel</h2>
+  <%= render "form", workspace: @workspace, channel: @channel %>
+</div>

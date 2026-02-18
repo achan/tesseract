@@ -46,7 +46,7 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
     sig_basestring = "v0:#{timestamp}:#{body}"
     signature = "v0=#{OpenSSL::HMAC.hexdigest("SHA256", @signing_secret, sig_basestring)}"
 
-    assert_difference "Event.count", 1 do
+    assert_difference "SlackEvent.count", 1 do
       post api_slack_events_path, params: body,
         headers: {
           "CONTENT_TYPE" => "application/json",
@@ -71,7 +71,7 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
     sig_basestring = "v0:#{timestamp}:#{body}"
     signature = "v0=#{OpenSSL::HMAC.hexdigest("SHA256", @signing_secret, sig_basestring)}"
 
-    assert_no_difference "Event.count" do
+    assert_no_difference "SlackEvent.count" do
       post api_slack_events_path, params: body,
         headers: {
           "CONTENT_TYPE" => "application/json",
@@ -96,7 +96,7 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
     sig_basestring = "v0:#{timestamp}:#{body}"
     signature = "v0=#{OpenSSL::HMAC.hexdigest("SHA256", @signing_secret, sig_basestring)}"
 
-    assert_no_difference "Event.count" do
+    assert_no_difference "SlackEvent.count" do
       post api_slack_events_path, params: body,
         headers: {
           "CONTENT_TYPE" => "application/json",

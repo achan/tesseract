@@ -2,10 +2,10 @@ require "test_helper"
 
 class CleanupJobTest < ActiveSupport::TestCase
   test "deletes old events" do
-    assert Event.exists?(event_id: "Ev_OLD_001")
+    assert SlackEvent.exists?(event_id: "Ev_OLD_001")
     CleanupJob.perform_now
-    assert_not Event.exists?(event_id: "Ev_OLD_001"), "Old event should be deleted"
-    assert Event.exists?(event_id: "Ev_MSG_001"), "Recent event should remain"
+    assert_not SlackEvent.exists?(event_id: "Ev_OLD_001"), "Old event should be deleted"
+    assert SlackEvent.exists?(event_id: "Ev_MSG_001"), "Recent event should remain"
   end
 
   test "deletes old summaries without open action items" do

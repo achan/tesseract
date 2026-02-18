@@ -1,14 +1,12 @@
 recent_summary:
-  workspace: one
-  channel_id: C_GENERAL
+  source: general (SlackChannel)
   period_start: <%= 1.day.ago.iso8601 %>
   period_end: <%= Time.current.iso8601 %>
   summary_text: "Team discussed project updates."
   model_used: claude-sonnet-4-5-20250929
 
 old_summary:
-  workspace: one
-  channel_id: C_GENERAL
+  source: general (SlackChannel)
   period_start: <%= 6.days.ago.iso8601 %>
   period_end: <%= 5.days.ago.iso8601 %>
   summary_text: "Old summary."

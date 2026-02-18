@@ -12,16 +12,16 @@
   <body>
     <div class="layout">
       <aside class="sidebar">
-        <h1 class="sidebar-title">Slack Summary</h1>
+        <h1 class="sidebar-title"><%= link_to "Slack Summary", root_path, class: "sidebar-title-link" %></h1>
         <nav>
-          <% Workspace.includes(:channels).find_each do |workspace| %>
+          <% Workspace.includes(:slack_channels).find_each do |workspace| %>
             <div class="workspace-group">
               <h2 class="workspace-name"><%= workspace.team_name || workspace.team_id %></h2>
               <ul class="channel-list">
-                <% workspace.channels.active.each do |channel| %>
+                <% workspace.slack_channels.active.each do |channel| %>
                   <li>
                     <%= link_to "##{channel.channel_name || channel.channel_id}",
-                          workspace_channel_path(workspace, channel.channel_id),
+                          workspace_slack_channel_path(workspace, channel),
                           class: "channel-link" %>
                   </li>
                 <% end %>
@@ -32,6 +32,9 @@
       </aside>
 
       <main class="content">
+        <% if notice.present? %>
+          <div class="flash-notice"><%= notice %></div>
+        <% end %>
         <%= yield %>
       </main>
     </div>

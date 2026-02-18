@@ -1,16 +1,14 @@
 message_one:
-  workspace: one
+  slack_channel: general
   event_id: Ev_MSG_001
-  channel_id: C_GENERAL
   event_type: message
   user_id: U_USER1
   ts: "1700000001.000001"
   payload: '{"text": "Hello world", "type": "message"}'
 
 old_event:
-  workspace: one
+  slack_channel: general
   event_id: Ev_OLD_001
-  channel_id: C_GENERAL
   event_type: message
   user_id: U_USER1
   ts: "1600000001.000001"

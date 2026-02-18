@@ -18,7 +18,7 @@ class CleanupJob < ApplicationJob
     deletable_summary_ids = old_summary_ids - summaries_with_items
     summaries_deleted = Summary.where(id: deletable_summary_ids).delete_all
 
-    events_deleted = Event.where("created_at < ?", cutoff).delete_all
+    events_deleted = SlackEvent.where("created_at < ?", cutoff).delete_all
 
     Rails.logger.info(
       "[CleanupJob] Deleted: #{events_deleted} events, " \
