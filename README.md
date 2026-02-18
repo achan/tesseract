@@ -13,6 +13,42 @@ action items using Claude.
 See [ARCHITECTURE.md](ARCHITECTURE.md) for full design details,
 database schema, and API documentation.
 
+## Slack App Setup
+
+Create a Slack app at [api.slack.com/apps](https://api.slack.com/apps) and
+configure the following:
+
+### User Token Scopes (OAuth & Permissions)
+
+- `channels:history` — view messages in public channels
+- `channels:read` — list public channels
+- `groups:history` — view messages in private channels
+- `groups:read` — list private channels
+- `im:history` — view messages in DMs
+- `im:read` — list DMs
+- `mpim:history` — view messages in group DMs
+- `mpim:read` — list group DMs
+- `reactions:read` — view emoji reactions
+- `search:read` — search workspace content
+- `users:read` — resolve user names
+
+### Event Subscriptions
+
+Enable events and set the Request URL to your cloudflared tunnel
+(e.g., `https://your-tunnel.example.com/api/slack/events`).
+
+Subscribe to these events **on behalf of users** (not bot events):
+
+- `message.channels`
+- `message.groups`
+- `message.im`
+- `message.mpim`
+- `reaction_added`
+
+After configuring scopes and events, install the app to your workspace
+and copy the **User OAuth Token** (`xoxp-...`) and **Signing Secret**
+into your `.env.local`.
+
 ## Prerequisites
 
 - Ruby 3.4.2

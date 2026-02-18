@@ -3,10 +3,12 @@ tokens  = ENV.fetch("SLACK_USER_OAUTH_TOKENS", "").split(",")
 secrets = ENV.fetch("SLACK_SIGNING_SECRETS", "").split(",")
 
 names.each_with_index do |name, i|
-  workspace = Workspace.find_or_create_by!(team_name: name.strip) do |w|
-    w.user_token     = tokens[i]&.strip
-    w.signing_secret = secrets[i]&.strip
-  end
+  workspace = Workspace.find_or_initialize_by(team_name: name.strip)
+  workspace.user_token     = tokens[i]&.strip if tokens[i].present?
+  workspace.signing_secret = secrets[i]&.strip if secrets[i].present?
+  workspace.include_dms   = true
+  workspace.include_mpims = true
+  workspace.save!
 
   env_key = "SLACK_CHANNELS_#{name.strip.upcase.gsub(/\s+/, "_")}"
   channel_ids = ENV.fetch(env_key, "").split(",").map(&:strip).reject(&:empty?)
