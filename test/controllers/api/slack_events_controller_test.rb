@@ -2,8 +2,7 @@ require "test_helper"
 
 class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @signing_secret = "test_signing_secret"
-    ENV["SLACK_SIGNING_SECRET"] = @signing_secret
+    @signing_secret = workspaces(:one).signing_secret
   end
 
   test "url_verification returns challenge" do
