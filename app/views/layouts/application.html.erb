@@ -20,7 +20,7 @@
             <div class="mb-6">
               <h2 class="text-xs uppercase tracking-wide text-sidebar-muted mb-2"><%= workspace.team_name %></h2>
               <ul class="space-y-0.5">
-                <% workspace.slack_channels.active.each do |channel| %>
+                <% workspace.slack_channels.active.channels.order(:channel_name).each do |channel| %>
                   <li>
                     <%= link_to "##{channel.channel_name || channel.channel_id}",
                           workspace_slack_channel_path(workspace, channel),
