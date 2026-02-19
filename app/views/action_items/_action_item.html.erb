@@ -1,5 +1,23 @@
-<div id="action_item_<%= action_item.id %>" class="p-3 border border-border rounded-md mb-2 <%= action_item.status == 'done' ? 'opacity-50' : '' %> <%= action_item.status == 'dismissed' ? 'opacity-40' : '' %>">
+<%
+  priority_classes = case action_item.priority
+  when 1 then "border-l-4 border-l-red-500"
+  when 2 then "border-l-4 border-l-orange-500"
+  when 3 then "border-l-4 border-l-yellow-500"
+  else "border-l-4 border-l-gray-400"
+  end
+
+  priority_label_classes = case action_item.priority
+  when 1 then "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+  when 2 then "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+  when 3 then "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+  else "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+  end
+%>
+<div id="action_item_<%= action_item.id %>" class="p-3 border border-border rounded-md mb-2 <%= priority_classes %> <%= action_item.status == 'done' ? 'opacity-50' : '' %> <%= action_item.status == 'dismissed' ? 'opacity-40' : '' %>">
   <div>
+    <div class="flex items-center gap-2 mb-1">
+      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded <%= priority_label_classes %>">P<%= action_item.priority %></span>
+    </div>
     <p class="text-sm mb-1"><%= action_item.description %></p>
     <% if action_item.assignee_user_id.present? %>
       <span class="text-xs text-muted">Assigned: <%= action_item.assignee_user_id %></span>

@@ -4,11 +4,12 @@ class ActionItem < ApplicationRecord
 
   validates :description, presence: true
   validates :status, presence: true, inclusion: { in: %w[open done dismissed] }
+  validates :priority, inclusion: { in: 1..5 }
 
   scope :open_items, -> { where(status: "open") }
 
-  after_create_commit :broadcast_append
-  after_update_commit :broadcast_replace
+  after_create_commit :broadcast_append, :broadcast_dashboard_append
+  after_update_commit :broadcast_replace, :broadcast_dashboard_remove
 
   private
 
@@ -32,6 +33,23 @@ class ActionItem < ApplicationRecord
       partial: "action_items/action_item",
       locals: { action_item: self }
     )
+  end
+
+  def broadcast_dashboard_append
+    return unless source.is_a?(SlackChannel) && status == "open"
+
+    broadcast_append_to(
+      "dashboard_action_items",
+      target: "dashboard_action_items",
+      partial: "dashboard/action_item",
+      locals: { action_item: self }
+    )
+  end
+
+  def broadcast_dashboard_remove
+    return unless source.is_a?(SlackChannel) && status != "open"
+
+    broadcast_remove_to("dashboard_action_items", target: "dashboard_action_item_#{id}")
   end
 
   def dom_id(record)
