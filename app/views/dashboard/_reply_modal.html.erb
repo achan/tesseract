@@ -1,0 +1,51 @@
+<div hidden
+     data-reply-modal-target="overlay"
+     data-action="click->reply-modal#close"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+  <div class="bg-card border border-border rounded-lg shadow-xl w-full max-w-lg mx-4 p-6"
+       data-action="click->reply-modal#stopPropagation">
+    <div id="reply_modal_content" data-reply-modal-target="content">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-foreground">
+          Reply to <span data-reply-modal-target="authorName"></span>
+        </h2>
+        <button type="button" data-action="reply-modal#close"
+                class="text-muted hover:text-foreground text-xl leading-none">&times;</button>
+      </div>
+
+      <p class="text-sm text-muted mb-4 line-clamp-2" data-reply-modal-target="preview"></p>
+
+      <div id="reply_modal_error" data-reply-modal-target="error" class="mb-2"></div>
+
+      <%= form_with url: slack_replies_path, data: { turbo: true, action: "turbo:submit-end->reply-modal#submitEnd" } do |f| %>
+        <%= f.hidden_field :slack_event_id, value: "", data: { reply_modal_target: "eventId" } %>
+
+        <fieldset class="mb-4">
+          <div class="flex gap-4 text-sm">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <%= f.radio_button :reply_type, "thread", checked: true, class: "accent-primary" %>
+              Reply in thread
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <%= f.radio_button :reply_type, "channel", class: "accent-primary" %>
+              Reply to channel
+            </label>
+          </div>
+        </fieldset>
+
+        <%= f.text_area :body, rows: 4, required: true,
+            placeholder: "Type your reply... (Enter to send, Cmd+Enter for new line)",
+            data: { reply_modal_target: "textarea", action: "keydown->reply-modal#handleKeydown" },
+            class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary resize-y" %>
+
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" data-action="reply-modal#close"
+                  class="px-3 py-1.5 text-sm text-muted hover:text-foreground rounded-md border border-border">
+            Cancel
+          </button>
+          <%= f.submit "Send", class: "px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:opacity-90 cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

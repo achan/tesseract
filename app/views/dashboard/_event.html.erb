@@ -39,18 +39,31 @@
         <% else %>
           <%= link_to "##{channel.display_name}", workspace_slack_channel_path(workspace, channel), class: "text-muted hover:text-foreground" %>
         <% end %>
-        <% if workspace.team_id.present? && event.ts.present? %>
-          <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= channel.channel_id %>&message=<%= event.ts.delete(".") %>"
-             class="ml-auto text-xs text-muted hover:text-foreground" title="Open in Slack">
-            <time datetime="<%= event.created_at.iso8601 %>" data-controller="local-time">
+        <div class="ml-auto flex items-center gap-2">
+          <button type="button" title="Reply"
+                  data-action="reply-modal#open"
+                  data-event-id="<%= event.id %>"
+                  data-author-name="<%= workspace.resolve_user_name(event.user_id) %>"
+                  data-message-preview="<%= truncate(event.payload&.dig("text") || "", length: 120) %>"
+                  class="text-muted hover:text-foreground">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+            </svg>
+          </button>
+          <% if workspace.team_id.present? && event.ts.present? %>
+            <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= channel.channel_id %>&message=<%= event.ts.delete(".") %>"
+               class="text-xs text-muted hover:text-foreground" title="Open in Slack">
+              <time datetime="<%= event.created_at.iso8601 %>" data-controller="local-time">
+                <%= short_time_ago(event.created_at) %>
+              </time>
+            </a>
+          <% else %>
+            <time datetime="<%= event.created_at.iso8601 %>" class="text-xs text-muted" data-controller="local-time">
               <%= short_time_ago(event.created_at) %>
             </time>
-          </a>
-        <% else %>
-          <time datetime="<%= event.created_at.iso8601 %>" class="ml-auto text-xs text-muted" data-controller="local-time">
-            <%= short_time_ago(event.created_at) %>
-          </time>
-        <% end %>
+          <% end %>
+        </div>
       </div>
       <% body = render_event_body(event) %>
       <% if body.present? %>

@@ -12,6 +12,8 @@ Rails.application.routes.draw do
   post "logout", to: "settings#logout"
 
   resources :action_items, only: :update
+  resources :live_activities, only: :destroy
+  resources :slack_replies, only: :create
 
   namespace :api do
     post "slack/events", to: "slack_events#create"

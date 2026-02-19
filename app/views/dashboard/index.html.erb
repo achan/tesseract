@@ -19,10 +19,14 @@
   <div id="dashboard_action_items" class="space-y-2 mb-8"></div>
 <% end %>
 
-<h1 class="text-xl font-semibold mb-6">Message Feed</h1>
+<div data-controller="reply-modal" data-action="keydown@window->reply-modal#closeOnKey">
+  <h1 class="text-xl font-semibold mb-6">Message Feed</h1>
 
-<div id="dashboard_events" class="space-y-2">
-  <% @events.each do |event| %>
-    <%= render "dashboard/event", event: event %>
-  <% end %>
+  <div id="dashboard_events" class="space-y-2">
+    <% @events.each do |event| %>
+      <%= render "dashboard/event", event: event %>
+    <% end %>
+  </div>
+
+  <%= render "dashboard/reply_modal" %>
 </div>
