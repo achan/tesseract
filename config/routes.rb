@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   end
 
   resource :settings, only: :show
+  post "logout", to: "settings#logout"
 
   resources :action_items, only: :update
 

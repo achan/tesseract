@@ -37,3 +37,12 @@
     </div>
   <% end %>
 </div>
+
+<% if http_basic_auth_configured? %>
+  <div class="bg-white border border-border rounded-lg p-6 mt-6">
+    <h2 class="text-lg font-semibold mb-4">Session</h2>
+    <%= button_to "Log out", logout_path,
+          method: :post,
+          class: "text-sm text-red-600 hover:text-red-800 cursor-pointer bg-transparent border-0 p-0 underline" %>
+  </div>
+<% end %>

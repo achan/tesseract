@@ -1,6 +1,7 @@
 module Api
   class SlackEventsController < ApplicationController
     skip_before_action :verify_authenticity_token
+    skip_before_action :authenticate
     before_action :find_workspace_and_verify_signature, unless: :url_verification?
 
     def create
