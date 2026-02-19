@@ -13,16 +13,17 @@
   else "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
   end
 %>
-<div id="action_item_<%= action_item.id %>" class="p-3 border border-border rounded-md mb-2 <%= priority_classes %> <%= action_item.status == 'done' ? 'opacity-50' : '' %> <%= action_item.status == 'dismissed' ? 'opacity-40' : '' %>">
-  <div>
-    <div class="flex items-center gap-2 mb-1">
-      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded <%= priority_label_classes %>">P<%= action_item.priority %></span>
-    </div>
-    <p class="text-sm mb-1"><%= action_item.description %></p>
-    <% if action_item.assignee_user_id.present? %>
-      <span class="text-xs text-muted">Assigned: <%= action_item.assignee_user_id %></span>
+<div id="action_item_<%= action_item.id %>" class="inline-block w-[320px] align-top p-3 border border-border rounded-md mr-3 <%= priority_classes %> <%= action_item.status == 'done' ? 'opacity-50' : '' %> <%= action_item.status == 'dismissed' ? 'opacity-40' : '' %>">
+  <div class="flex items-start justify-between gap-2 mb-1">
+    <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= priority_label_classes %>">P<%= action_item.priority %></span>
+    <% if action_item.status != "open" %>
+      <span class="text-xs text-muted capitalize"><%= action_item.status %></span>
     <% end %>
   </div>
+  <p class="text-sm mb-1 line-clamp-3"><%= action_item.description %></p>
+  <% if action_item.assignee_user_id.present? %>
+    <span class="text-xs text-muted">Assigned: <%= action_item.assignee_user_id %></span>
+  <% end %>
   <% if action_item.status == "open" %>
     <div class="flex gap-2 mt-2">
       <%= button_to "Done", action_item_path(action_item), method: :patch,
@@ -34,7 +35,5 @@
             class: "inline-flex items-center px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer",
             data: { turbo: true } %>
     </div>
-  <% else %>
-    <span class="inline-block text-xs text-muted mt-2 capitalize"><%= action_item.status %></span>
   <% end %>
 </div>

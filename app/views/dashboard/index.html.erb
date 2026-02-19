@@ -2,7 +2,7 @@
 <%= turbo_stream_from "dashboard_action_items" %>
 <%= turbo_stream_from "dashboard_events" %>
 
-<div id="dashboard_live_activities" class="space-y-2 mb-6">
+<div id="dashboard_live_activities" class="overflow-x-auto pb-2 whitespace-nowrap mb-6">
   <% @live_activities.each do |activity| %>
     <%= render "dashboard/live_activity", live_activity: activity %>
   <% end %>

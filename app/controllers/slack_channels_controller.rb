@@ -27,7 +27,10 @@ class SlackChannelsController < ApplicationController
 
   def toggle_hidden
     @channel.update!(hidden: !@channel.hidden?)
-    redirect_to settings_path
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: turbo_stream.replace("channel_star_#{@channel.id}", partial: "slack_channels/star", locals: { workspace: @workspace, channel: @channel }) }
+      format.html { redirect_to settings_path }
+    end
   end
 
   private
