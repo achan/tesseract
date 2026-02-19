@@ -30,21 +30,6 @@ class Workspace < ApplicationRecord
     { name: user_id, handle: nil, avatar: nil }
   end
 
-  def fetch_slack_channels
-    return [] if user_token.blank?
-
-    Rails.cache.fetch("workspace_#{id}_slack_channels") do
-      client = Slack::Web::Client.new(token: user_token)
-      list_conversations(client, "public_channel,private_channel").sort_by(&:first)
-    end
-  rescue ActiveRecord::Encryption::Errors::Decryption
-    []
-  end
-
-  def clear_slack_channels_cache
-    Rails.cache.delete("workspace_#{id}_slack_channels")
-  end
-
   def authenticated_user_id
     return if user_token.blank?
 
@@ -66,26 +51,5 @@ class Workspace < ApplicationRecord
     self.team_id = response.team_id
   rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
     # Leave team_id blank if the API call fails
-  end
-
-  def list_conversations(client, types)
-    channels = []
-    cursor = nil
-
-    loop do
-      response = client.conversations_list(
-        types: types,
-        exclude_archived: true,
-        limit: 200,
-        cursor: cursor
-      )
-      channels.concat(response.channels.map { |c| [c.name || c.id, c.id] })
-      cursor = response.response_metadata&.next_cursor
-      break if cursor.blank?
-    end
-
-    channels
-  rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
-    []
   end
 end

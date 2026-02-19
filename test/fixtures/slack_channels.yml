@@ -2,10 +2,10 @@ general:
   workspace: one
   channel_id: C_GENERAL
   channel_name: general
-  active: true
+  hidden: false
 
 random:
   workspace: one
   channel_id: C_RANDOM
   channel_name: random
-  active: false
+  hidden: true

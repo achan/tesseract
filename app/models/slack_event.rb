@@ -22,6 +22,7 @@ class SlackEvent < ApplicationRecord
 
   def broadcast_to_dashboard
     return unless event_type == "message"
+    return if slack_channel.hidden?
 
     broadcast_prepend_to(
       "dashboard_events",

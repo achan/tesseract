@@ -1,35 +1,12 @@
 class SlackChannelsController < ApplicationController
   before_action :set_workspace
-  before_action :set_slack_channel, only: [:show, :edit, :update, :destroy]
+  before_action :set_slack_channel, only: [:show, :edit, :update, :destroy, :toggle_hidden]
 
   def show
     @events = @channel.slack_events.order(created_at: :desc).limit(50)
     @summary = Summary.where(source: @channel).order(created_at: :desc).first
     @action_items = @summary&.action_items&.order(created_at: :asc) || ActionItem.none
     @workspaces = Workspace.includes(:slack_channels).all
-  end
-
-  def new
-    @channel = @workspace.slack_channels.build
-    existing_ids = @workspace.slack_channels.pluck(:channel_id)
-    @available_channels = @workspace.fetch_slack_channels.reject { |_, id| existing_ids.include?(id) }
-  end
-
-  def available
-    existing_ids = @workspace.slack_channels.pluck(:channel_id)
-    @available_channels = @workspace.fetch_slack_channels.reject { |_, id| existing_ids.include?(id) }
-    render layout: false
-  end
-
-  def create
-    @channel = @workspace.slack_channels.build(slack_channel_params)
-    if @channel.save
-      redirect_to root_path, notice: "Channel added."
-    else
-      existing_ids = @workspace.slack_channels.pluck(:channel_id)
-      @available_channels = @workspace.fetch_slack_channels.reject { |_, id| existing_ids.include?(id) }
-      render :new, status: :unprocessable_entity
-    end
   end
 
   def edit
@@ -48,6 +25,11 @@ class SlackChannelsController < ApplicationController
     redirect_to root_path, notice: "Channel removed."
   end
 
+  def toggle_hidden
+    @channel.update!(hidden: !@channel.hidden?)
+    redirect_to settings_path
+  end
+
   private
 
   def set_workspace
@@ -59,6 +41,6 @@ class SlackChannelsController < ApplicationController
   end
 
   def slack_channel_params
-    params.require(:slack_channel).permit(:channel_id, :channel_name, :active)
+    params.require(:slack_channel).permit(:channel_id, :channel_name, :priority, :interaction_description)
   end
 end
