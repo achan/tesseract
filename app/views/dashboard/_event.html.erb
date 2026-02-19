@@ -16,6 +16,6 @@
     <% end %>
   </div>
   <% if event.payload.is_a?(Hash) && event.payload["text"].present? %>
-    <p class="text-sm"><%= event.payload["text"] %></p>
+    <div class="text-sm prose prose-sm prose-invert max-w-none"><%= render_markdown(event.payload["text"]) %></div>
   <% end %>
 </div>

@@ -7,7 +7,7 @@
     </time>
   </div>
   <% if event.event_type == "message" && event.payload.is_a?(Hash) %>
-    <p class="text-sm"><%= event.payload["text"] %></p>
+    <div class="text-sm prose prose-sm prose-invert max-w-none"><%= render_markdown(event.payload["text"]) %></div>
   <% end %>
   <% if event.thread_ts.present? %>
     <span class="inline-block text-xs text-primary mt-1">Thread</span>
