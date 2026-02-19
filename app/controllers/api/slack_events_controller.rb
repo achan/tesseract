@@ -14,9 +14,9 @@ module Api
       channel_id = event["channel"] || event.dig("item", "channel")
       return head :ok unless channel_id
 
-      slack_channel = @workspace.slack_channels.find_by(channel_id: channel_id, active: true)
-      slack_channel ||= auto_track_direct_conversation(channel_id, event["channel_type"])
-      return head :ok unless slack_channel
+      slack_channel = @workspace.slack_channels.find_or_create_by(channel_id: channel_id) do |c|
+        c.channel_name = channel_id
+      end
 
       event_id = parsed_payload["event_id"]
       return head :ok unless event_id
@@ -41,7 +41,7 @@ module Api
       return head :unauthorized if (Time.now.to_i - timestamp.to_i).abs > 300
 
       channel_id = parsed_payload.dig("event", "channel") || parsed_payload.dig("event", "item", "channel")
-      slack_channel = SlackChannel.find_by(channel_id: channel_id, active: true) if channel_id
+      slack_channel = SlackChannel.find_by(channel_id: channel_id) if channel_id
 
       if slack_channel
         @workspace = slack_channel.workspace
@@ -75,21 +75,6 @@ module Api
 
     def parsed_payload
       @_parsed_payload ||= JSON.parse(request_body)
-    end
-
-    def auto_track_direct_conversation(channel_id, channel_type)
-      return unless %w[im mpim].include?(channel_type)
-
-      case channel_type
-      when "im"
-        return unless @workspace.include_dms
-      when "mpim"
-        return unless @workspace.include_mpims
-      end
-
-      @workspace.slack_channels.find_or_create_by(channel_id: channel_id) do |c|
-        c.channel_name = channel_id
-      end
     end
   end
 end

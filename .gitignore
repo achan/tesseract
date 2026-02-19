@@ -21,6 +21,7 @@
 /config/master.key
 /node_modules
 .DS_Store
+cloudflared.log
 
 /app/assets/builds/*
 !/app/assets/builds/.keep

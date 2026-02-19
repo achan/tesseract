@@ -1,4 +1,5 @@
-<div id="<%= dom_id(event) %>" class="bg-card border border-border rounded-md px-4 py-3 mb-2">
+<div id="<%= dom_id(event) %>" class="bg-card border border-border rounded-md px-4 py-3 mb-2"
+     data-controller="lightbox" data-action="keydown@window->lightbox#closeOnKey">
   <div class="flex gap-3 text-xs text-muted mb-1">
     <span class="bg-secondary px-1.5 py-0.5 rounded text-[0.7rem]"><%= event.event_type %></span>
     <span><%= event.user_id %></span>
@@ -13,10 +14,12 @@
       </a>
     <% end %>
   </div>
-  <% if event.event_type == "message" && event.payload.is_a?(Hash) %>
-    <p class="text-sm"><%= event.payload["text"] %></p>
+  <% body = render_event_body(event) %>
+  <% if body.present? %>
+    <div class="text-sm prose prose-sm prose-invert max-w-none"><%= body %></div>
   <% end %>
   <% if event.thread_ts.present? %>
     <span class="inline-block text-xs text-primary mt-1">Thread</span>
   <% end %>
+  <%= render "shared/lightbox_overlay" %>
 </div>

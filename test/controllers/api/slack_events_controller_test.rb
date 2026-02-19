@@ -38,18 +38,8 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
       event: { type: "message", channel: "C_GENERAL", user: "U1", ts: "1.2", text: "hello" }
     }
 
-    body = payload.to_json
-    timestamp = Time.now.to_i.to_s
-    sig_basestring = "v0:#{timestamp}:#{body}"
-    signature = "v0=#{OpenSSL::HMAC.hexdigest("SHA256", @signing_secret, sig_basestring)}"
-
     assert_difference "SlackEvent.count", 1 do
-      post api_slack_events_path, params: body,
-        headers: {
-          "CONTENT_TYPE" => "application/json",
-          "X-Slack-Request-Timestamp" => timestamp,
-          "X-Slack-Signature" => signature
-        }
+      post_signed payload
     end
 
     assert_response :success
@@ -62,30 +52,6 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
       event: { type: "message", channel: "C_GENERAL", user: "U1", ts: "1.1", text: "dup" }
     }
 
-    body = payload.to_json
-    timestamp = Time.now.to_i.to_s
-    sig_basestring = "v0:#{timestamp}:#{body}"
-    signature = "v0=#{OpenSSL::HMAC.hexdigest("SHA256", @signing_secret, sig_basestring)}"
-
-    assert_no_difference "SlackEvent.count" do
-      post api_slack_events_path, params: body,
-        headers: {
-          "CONTENT_TYPE" => "application/json",
-          "X-Slack-Request-Timestamp" => timestamp,
-          "X-Slack-Signature" => signature
-        }
-    end
-
-    assert_response :success
-  end
-
-  test "ignores events for inactive channels" do
-    payload = {
-      type: "event_callback",
-      event_id: "Ev_RANDOM_001",
-      event: { type: "message", channel: "C_RANDOM", user: "U1", ts: "1.1", text: "ignored" }
-    }
-
     assert_no_difference "SlackEvent.count" do
       post_signed payload
     end
@@ -93,13 +59,11 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "auto-tracks DM events when workspace has include_dms enabled" do
-    workspaces(:one).update!(include_dms: true)
-
+  test "auto-creates channel for unknown channel_id" do
     payload = {
       type: "event_callback",
-      event_id: "Ev_DM_001",
-      event: { type: "message", channel: "D_USER123", channel_type: "im", user: "U1", ts: "1.1", text: "hello" }
+      event_id: "Ev_UNKNOWN_001",
+      event: { type: "message", channel: "C_NEWCHAN", user: "U1", ts: "1.1", text: "hello" }
     }
 
     assert_difference ["SlackEvent.count", "SlackChannel.count"], 1 do
@@ -107,75 +71,22 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    channel = SlackChannel.find_by(channel_id: "D_USER123")
+    channel = SlackChannel.find_by(channel_id: "C_NEWCHAN")
     assert channel
     assert_equal workspaces(:one), channel.workspace
   end
 
-  test "ignores DM events when workspace has include_dms disabled" do
-    workspaces(:one).update!(include_dms: false)
-
-    payload = {
-      type: "event_callback",
-      event_id: "Ev_DM_002",
-      event: { type: "message", channel: "D_USER456", channel_type: "im", user: "U1", ts: "1.1", text: "hello" }
-    }
-
-    assert_no_difference "SlackEvent.count" do
-      post_signed payload
-    end
-
-    assert_response :success
-  end
-
-  test "auto-tracks MPIM events when workspace has include_mpims enabled" do
-    workspaces(:one).update!(include_mpims: true)
-
-    payload = {
-      type: "event_callback",
-      event_id: "Ev_MPIM_001",
-      event: { type: "message", channel: "G_GROUP123", channel_type: "mpim", user: "U1", ts: "1.1", text: "group msg" }
-    }
-
-    assert_difference ["SlackEvent.count", "SlackChannel.count"], 1 do
-      post_signed payload
-    end
-
-    assert_response :success
-    channel = SlackChannel.find_by(channel_id: "G_GROUP123")
-    assert channel
-    assert_equal workspaces(:one), channel.workspace
-  end
-
-  test "ignores MPIM events when workspace has include_mpims disabled" do
-    workspaces(:one).update!(include_mpims: false)
-
-    payload = {
-      type: "event_callback",
-      event_id: "Ev_MPIM_002",
-      event: { type: "message", channel: "G_GROUP456", channel_type: "mpim", user: "U1", ts: "1.1", text: "group msg" }
-    }
-
-    assert_no_difference "SlackEvent.count" do
-      post_signed payload
-    end
-
-    assert_response :success
-  end
-
-  test "reuses existing channel for subsequent DM events" do
-    workspaces(:one).update!(include_dms: true)
-
+  test "reuses existing channel for subsequent events" do
     payload1 = {
       type: "event_callback",
-      event_id: "Ev_DM_003",
-      event: { type: "message", channel: "D_REUSE", channel_type: "im", user: "U1", ts: "1.1", text: "first" }
+      event_id: "Ev_REUSE_001",
+      event: { type: "message", channel: "C_REUSE", user: "U1", ts: "1.1", text: "first" }
     }
 
     payload2 = {
       type: "event_callback",
-      event_id: "Ev_DM_004",
-      event: { type: "message", channel: "D_REUSE", channel_type: "im", user: "U1", ts: "1.2", text: "second" }
+      event_id: "Ev_REUSE_002",
+      event: { type: "message", channel: "C_REUSE", user: "U1", ts: "1.2", text: "second" }
     }
 
     assert_difference "SlackChannel.count", 1 do
@@ -183,7 +94,7 @@ class Api::SlackEventsControllerTest < ActionDispatch::IntegrationTest
       post_signed payload2
     end
 
-    assert_equal 2, SlackChannel.find_by(channel_id: "D_REUSE").slack_events.count
+    assert_equal 2, SlackChannel.find_by(channel_id: "C_REUSE").slack_events.count
   end
 
   private

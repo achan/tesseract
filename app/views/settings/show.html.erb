@@ -3,9 +3,37 @@
 <h1 class="text-2xl font-bold mb-6">Settings</h1>
 
 <div class="bg-white border border-border rounded-lg p-6">
-  <h2 class="text-lg font-semibold mb-2">Slack channels cache</h2>
-  <p class="text-sm text-muted mb-4">
-    Channel lists are cached indefinitely. Click below to refresh the cache and pick up any new or renamed channels.
+  <h2 class="text-lg font-semibold mb-4">Channels</h2>
+  <p class="text-sm text-muted mb-6">
+    Click the star to show or hide a channel from the dashboard feed.
   </p>
-  <%= button_to "Refresh Slack channels", refresh_slack_cache_settings_path, class: "bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 cursor-pointer" %>
+
+  <% Workspace.includes(:slack_channels).find_each do |workspace| %>
+    <% channels = workspace.slack_channels.order(:channel_name) %>
+    <% next if channels.empty? %>
+
+    <div class="mb-6">
+      <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2"><%= workspace.team_name %></h3>
+      <ul class="divide-y divide-gray-100">
+        <% channels.each do |channel| %>
+          <li class="flex items-center justify-between py-2">
+            <span class="text-sm"><%= channel.display_name %></span>
+            <div class="flex items-center gap-2">
+              <%= link_to "Edit", edit_workspace_slack_channel_path(workspace, channel),
+                    class: "text-xs text-muted hover:text-foreground" %>
+              <%= button_to toggle_hidden_workspace_slack_channel_path(workspace, channel),
+                    method: :patch,
+                    class: "text-xl leading-none cursor-pointer bg-transparent border-0 p-1 hover:scale-110 transition-transform" do %>
+                <% if channel.hidden? %>
+                  <span class="text-gray-300" title="Hidden from feed">&#9734;</span>
+                <% else %>
+                  <span class="text-yellow-400" title="Visible in feed">&#9733;</span>
+                <% end %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
 </div>

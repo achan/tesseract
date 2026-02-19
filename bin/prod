@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
@@ -7,14 +7,14 @@ export SOLID_QUEUE_IN_PUMA=1
 export PORT="${PORT:-6001}"
 
 # Read tunnel ID from .worktreerc
-TUNNEL_ID=$(grep "^CLOUDFLARE_TUNNEL_ID=" .worktreerc | cut -d'=' -f2)
+CLOUDFLARE_TUNNEL_ID=$(grep "^CLOUDFLARE_TUNNEL_ID=" .worktreerc | cut -d'=' -f2)
 
 bin/rails assets:precompile
 bin/rails db:prepare
 
 # Start cloudflared tunnel in the background
-if [ -n "$TUNNEL_ID" ]; then
-  CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$TUNNEL_ID")
+if [ -n "$CLOUDFLARE_TUNNEL_ID" ]; then
+  CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$CLOUDFLARE_TUNNEL_ID")
   cloudflared tunnel --loglevel debug --logfile cloudflared.log run --token "$CLOUDFLARE_TOKEN" &
   TUNNEL_PID=$!
   echo "Started cloudflared tunnel (PID: $TUNNEL_PID)"

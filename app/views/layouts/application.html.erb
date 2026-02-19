@@ -10,38 +10,18 @@
   </head>
 
   <body class="bg-background text-foreground antialiased">
-    <div class="grid grid-cols-[240px_1fr] min-h-screen">
-      <aside class="bg-sidebar text-sidebar-foreground p-4 overflow-y-auto flex flex-col">
-        <h1 class="text-lg text-white mb-6 pb-3 border-b border-white/20">
-          <%= link_to "Slack Summary", root_path, class: "text-inherit no-underline" %>
-        </h1>
-        <nav>
-          <% Workspace.includes(:slack_channels).find_each do |workspace| %>
-            <div class="mb-6">
-              <h2 class="text-xs uppercase tracking-wide text-sidebar-muted mb-2"><%= workspace.team_name %></h2>
-              <ul class="space-y-0.5">
-                <% workspace.slack_channels.active.channels.order(:channel_name).each do |channel| %>
-                  <li>
-                    <%= link_to "##{channel.channel_name || channel.channel_id}",
-                          workspace_slack_channel_path(workspace, channel),
-                          class: "block px-2 py-1 text-sm text-sidebar-foreground no-underline rounded-sm hover:bg-sidebar-accent hover:text-white" %>
-                  </li>
-                <% end %>
-              </ul>
-            </div>
-          <% end %>
-        </nav>
-        <div class="mt-auto pt-4 border-t border-white/20">
-          <%= link_to "Settings", settings_path, class: "block px-2 py-1 text-sm text-sidebar-foreground no-underline rounded-sm hover:bg-sidebar-accent hover:text-white" %>
-        </div>
-      </aside>
+    <nav class="bg-sidebar text-sidebar-foreground px-6 py-3 flex items-center justify-between">
+      <h1 class="text-lg text-white font-semibold">
+        <%= link_to "Slack Summary", root_path, class: "text-inherit no-underline" %>
+      </h1>
+      <%= link_to "Settings", settings_path, class: "text-sm text-sidebar-foreground no-underline hover:text-white" %>
+    </nav>
 
-      <main class="p-8 overflow-y-auto">
-        <% if notice.present? %>
-          <div class="bg-green-50 border border-success rounded-md px-4 py-3 mb-6 text-green-800 text-sm"><%= notice %></div>
-        <% end %>
-        <%= yield %>
-      </main>
-    </div>
+    <main class="p-8 overflow-y-auto">
+      <% if notice.present? %>
+        <div class="bg-green-50 border border-success rounded-md px-4 py-3 mb-6 text-green-800 text-sm"><%= notice %></div>
+      <% end %>
+      <%= yield %>
+    </main>
   </body>
 </html>

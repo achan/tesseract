@@ -1,21 +1,72 @@
-<div id="<%= dom_id(event) %>" class="bg-card border border-border rounded-md px-4 py-3">
+<div id="<%= dom_id(event) %>" class="bg-card border border-border rounded-md px-4 py-3"
+     data-controller="lightbox" data-action="keydown@window->lightbox#closeOnKey">
   <% channel = event.slack_channel %>
   <% workspace = channel.workspace %>
-  <div class="flex items-center gap-2 text-xs text-muted mb-1">
-    <span class="bg-secondary px-1.5 py-0.5 rounded text-[0.7rem]"><%= workspace.team_name %></span>
-    <span class="text-muted">#<%= channel.channel_name || channel.channel_id %></span>
-    <span class="font-medium text-foreground"><%= workspace.resolve_user_name(event.user_id) %></span>
-    <time datetime="<%= event.created_at.iso8601 %>" class="ml-auto">
-      <%= event.created_at.strftime("%b %d, %H:%M") %>
-    </time>
-    <% if workspace.team_id.present? && event.ts.present? %>
-      <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= channel.channel_id %>&message=<%= event.ts.delete(".") %>"
-         class="text-primary hover:underline" title="Open in Slack">
-        Slack &#x2197;
-      </a>
-    <% end %>
+  <% avatar_url = workspace.resolve_user_avatar(event.user_id) %>
+  <div class="flex gap-3">
+    <div class="flex-shrink-0 pt-0.5">
+      <% if avatar_url %>
+        <img src="<%= avatar_url %>" alt="" class="w-10 h-10 rounded-full">
+      <% else %>
+        <div class="w-10 h-10 rounded-full bg-secondary"></div>
+      <% end %>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 text-sm">
+        <span class="font-semibold text-foreground"><%= workspace.resolve_user_name(event.user_id) %></span>
+        <% if channel.mpim? %>
+          <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex items-center -space-x-1.5" do %>
+            <% channel.member_profiles.each do |profile| %>
+              <% if profile[:avatar] %>
+                <img src="<%= profile[:avatar] %>" alt="<%= profile[:name] %>" title="<%= profile[:name] %>" class="w-4 h-4 rounded-full ring-1 ring-card">
+              <% else %>
+                <div class="w-4 h-4 rounded-full bg-secondary ring-1 ring-card" title="<%= profile[:name] %>"></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% elsif channel.dm? %>
+          <% me = workspace.resolve_user_profile(workspace.authenticated_user_id) %>
+          <% partner = channel.dm_partner_profile %>
+          <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex items-center -space-x-1.5", title: partner&.dig(:name) || channel.display_name do %>
+            <% [me, partner].compact.each do |profile| %>
+              <% if profile[:avatar] %>
+                <img src="<%= profile[:avatar] %>" alt="<%= profile[:name] %>" title="<%= profile[:name] %>" class="w-4 h-4 rounded-full ring-1 ring-card">
+              <% else %>
+                <div class="w-4 h-4 rounded-full bg-secondary ring-1 ring-card" title="<%= profile[:name] %>"></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% else %>
+          <%= link_to "##{channel.display_name}", workspace_slack_channel_path(workspace, channel), class: "text-muted hover:text-foreground" %>
+        <% end %>
+        <% if workspace.team_id.present? && event.ts.present? %>
+          <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= channel.channel_id %>&message=<%= event.ts.delete(".") %>"
+             class="ml-auto text-xs text-muted hover:text-foreground" title="Open in Slack">
+            <time datetime="<%= event.created_at.iso8601 %>" data-controller="local-time">
+              <%= short_time_ago(event.created_at) %>
+            </time>
+          </a>
+        <% else %>
+          <time datetime="<%= event.created_at.iso8601 %>" class="ml-auto text-xs text-muted" data-controller="local-time">
+            <%= short_time_ago(event.created_at) %>
+          </time>
+        <% end %>
+      </div>
+      <% body = render_event_body(event) %>
+      <% if body.present? %>
+        <div data-controller="expandable">
+          <div class="text-sm prose prose-sm prose-invert max-w-none mt-1 max-h-24 overflow-hidden"
+               data-expandable-target="content">
+            <%= body %>
+          </div>
+          <button class="text-xs text-primary hover:underline mt-1"
+                  data-expandable-target="toggle"
+                  data-action="expandable#toggle">
+            Show more
+          </button>
+        </div>
+      <% end %>
+    </div>
   </div>
-  <% if event.payload.is_a?(Hash) && event.payload["text"].present? %>
-    <p class="text-sm"><%= event.payload["text"] %></p>
-  <% end %>
+  <%= render "shared/lightbox_overlay" %>
 </div>

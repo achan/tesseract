@@ -24,12 +24,10 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # When behind cloudflared tunnel, it sets X-Forwarded-Proto to signal HTTPS.
-  # Only assume SSL when that header is present (not for direct localhost access).
-  config.assume_ssl = ENV.fetch("ASSUME_SSL", "false") == "true"
-
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  config.force_ssl = ENV.fetch("FORCE_SSL", "false") == "true"
+  # SSL is handled by cloudflared at the edge. Don't force SSL at the
+  # app level so direct HTTP access (e.g. localhost) still works.
+  # config.assume_ssl = true
+  # config.force_ssl = true
 
   # Skip http-to-https redirect for the default health check endpoint.
   # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
@@ -79,6 +77,12 @@ Rails.application.configure do
 
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
+
+  # Allow Action Cable connections from the tunnel and localhost
+  config.action_cable.allowed_request_origins = [
+    "https://achanbot-1.docovia.com",
+    /http:\/\/localhost.*/
+  ]
 
   # Enable DNS rebinding protection and other `Host` header attacks.
   # config.hosts = [

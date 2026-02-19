@@ -2,14 +2,13 @@ Rails.application.routes.draw do
   root "dashboard#index"
 
   resources :workspaces, except: :show do
-    resources :slack_channels do
-      get :available, on: :collection
+    resources :slack_channels, except: [:index, :new, :create] do
+      patch :toggle_hidden, on: :member
     end
+    get "files/:file_id/proxy", to: "slack_files#show", as: :slack_file_proxy
   end
 
-  resource :settings, only: :show do
-    post :refresh_slack_cache, on: :member
-  end
+  resource :settings, only: :show
 
   resources :action_items, only: :update
 

@@ -17,10 +17,10 @@ class SlackChannelTest < ActiveSupport::TestCase
     assert_includes channel.errors[:channel_id], "has already been taken"
   end
 
-  test "active scope returns only active channels" do
+  test "visible scope returns only non-hidden channels" do
     workspace = workspaces(:one)
-    active = workspace.slack_channels.active
-    assert active.all?(&:active?)
-    assert_equal 1, active.count
+    visible = workspace.slack_channels.visible
+    assert visible.none?(&:hidden?)
+    assert_equal 1, visible.count
   end
 end
