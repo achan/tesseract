@@ -6,7 +6,7 @@ class SlackEvent < ApplicationRecord
   scope :in_window, ->(start_time, end_time) { where(created_at: start_time..end_time) }
   scope :messages, -> { where(event_type: "message") }
 
-  after_create_commit :broadcast_event, :broadcast_to_dashboard
+  after_create_commit :broadcast_event, :broadcast_to_dashboard, :enqueue_action_items_job
 
   private
 
@@ -18,6 +18,12 @@ class SlackEvent < ApplicationRecord
       partial: "slack_events/event",
       locals: { event: self }
     )
+  end
+
+  def enqueue_action_items_job
+    return if slack_channel.hidden?
+
+    GenerateActionItemsJob.set(wait: 5.seconds).perform_later(slack_event_id: id)
   end
 
   def broadcast_to_dashboard

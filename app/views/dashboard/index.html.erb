@@ -1,6 +1,18 @@
-<h1 class="text-xl font-semibold mb-6">Message Feed</h1>
-
+<%= turbo_stream_from "dashboard_action_items" %>
 <%= turbo_stream_from "dashboard_events" %>
+
+<% if @action_items.any? %>
+  <h2 class="text-xl font-semibold mb-4">Action Items</h2>
+  <div id="dashboard_action_items" class="space-y-2 mb-8">
+    <% @action_items.each do |action_item| %>
+      <%= render "dashboard/action_item", action_item: action_item %>
+    <% end %>
+  </div>
+<% else %>
+  <div id="dashboard_action_items" class="space-y-2 mb-8"></div>
+<% end %>
+
+<h1 class="text-xl font-semibold mb-6">Message Feed</h1>
 
 <div id="dashboard_events" class="space-y-2">
   <% @events.each do |event| %>
