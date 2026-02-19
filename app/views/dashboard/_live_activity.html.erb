@@ -28,8 +28,16 @@
         <% end %>
       </div>
     <% end %>
+    <span class="text-xs text-muted mt-1" data-controller="elapsed" data-elapsed-since-value="<%= live_activity.created_at.iso8601 %>">
+      <span data-elapsed-target="display"></span>
+    </span>
   </div>
-  <div class="flex-shrink-0" data-controller="elapsed" data-elapsed-since-value="<%= live_activity.created_at.iso8601 %>">
-    <span class="text-xs text-muted" data-elapsed-target="display"></span>
+  <div class="flex-shrink-0">
+    <%= button_to live_activity_path(live_activity), method: :delete,
+        class: "text-muted hover:text-foreground", title: "Remove" do %>
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    <% end %>
   </div>
 </div>
