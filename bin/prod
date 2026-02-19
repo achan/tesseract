@@ -14,7 +14,7 @@ if [ -z "$CLOUDFLARE_TUNNEL_ID" ]; then
   exit 1
 fi
 
-bin/rails tailwindcss:build
+bin/rails assets:precompile
 bin/rails db:prepare
 
 # Start cloudflared tunnel in the background
