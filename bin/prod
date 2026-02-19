@@ -9,20 +9,20 @@ export PORT="${PORT:-6001}"
 # Read tunnel ID from .worktreerc
 CLOUDFLARE_TUNNEL_ID=$(grep "^CLOUDFLARE_TUNNEL_ID=" .worktreerc | cut -d'=' -f2)
 
-if [ -z "$CLOUDFLARE_TUNNEL_ID" ]; then
-  echo "Error: CLOUDFLARE_TUNNEL_ID not found in .worktreerc" >&2
-  exit 1
-fi
-
 bin/rails assets:precompile
 bin/rails db:prepare
 
 # Start cloudflared tunnel in the background
-CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$CLOUDFLARE_TUNNEL_ID")
-cloudflared tunnel --loglevel debug --logfile cloudflared.log run --token "$CLOUDFLARE_TOKEN" &
-TUNNEL_PID=$!
+if [ -n "$CLOUDFLARE_TUNNEL_ID" ]; then
+  CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$CLOUDFLARE_TUNNEL_ID")
+  cloudflared tunnel --loglevel debug --logfile cloudflared.log run --token "$CLOUDFLARE_TOKEN" &
+  TUNNEL_PID=$!
+  echo "Started cloudflared tunnel (PID: $TUNNEL_PID)"
 
-# Kill tunnel when the script exits
-trap "kill $TUNNEL_PID 2>/dev/null" EXIT
+  # Ensure tunnel is stopped when the script exits
+  trap "kill $TUNNEL_PID 2>/dev/null" EXIT
+else
+  echo "Warning: No CLOUDFLARE_TUNNEL_ID found in .worktreerc, skipping tunnel"
+fi
 
 exec bin/rails server

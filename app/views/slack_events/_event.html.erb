@@ -6,6 +6,13 @@
     <time datetime="<%= event.created_at.iso8601 %>">
       <%= event.created_at.strftime("%b %d, %H:%M") %>
     </time>
+    <% workspace = event.slack_channel.workspace %>
+    <% if workspace.team_id.present? && event.ts.present? %>
+      <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= event.slack_channel.channel_id %>&message=<%= event.ts.delete(".") %>"
+         class="text-primary hover:underline ml-auto" title="Open in Slack">
+        Slack &#x2197;
+      </a>
+    <% end %>
   </div>
   <% body = render_event_body(event) %>
   <% if body.present? %>
