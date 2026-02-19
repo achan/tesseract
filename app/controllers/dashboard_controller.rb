@@ -4,7 +4,7 @@ class DashboardController < ApplicationController
       .messages
       .joins(:slack_channel).where(slack_channels: { hidden: false })
       .includes(slack_channel: :workspace)
+      .where("slack_events.created_at > ?", 5.hours.ago)
       .order(created_at: :desc)
-      .limit(100)
   end
 end

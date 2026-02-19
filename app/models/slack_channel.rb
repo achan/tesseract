@@ -17,7 +17,7 @@ class SlackChannel < ApplicationRecord
   end
 
   def mpim?
-    channel_id.start_with?("G")
+    channel_id.start_with?("G") || channel_name&.start_with?("mpdm-")
   end
 
   def dm?
@@ -59,9 +59,9 @@ class SlackChannel < ApplicationRecord
     info = client.conversations_info(channel: channel_id)
     channel = info.channel
 
-    self.channel_name = channel.name.presence ||
-      resolve_im_name(client, channel) ||
+    self.channel_name = resolve_im_name(client, channel) ||
       resolve_mpim_name(client, channel) ||
+      channel.name.presence ||
       channel.purpose&.value.presence
   rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
     # Leave channel_name as-is if the API call fails
