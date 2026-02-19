@@ -22,11 +22,12 @@ class Workspace < ApplicationRecord
       info = slack_client.users_info(user: user_id)
       {
         name: info.user.real_name.presence || info.user.name.presence || user_id,
+        handle: info.user.name,
         avatar: info.user.profile.image_32.presence || info.user.profile.image_24.presence
       }
     end
   rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
-    { name: user_id, avatar: nil }
+    { name: user_id, handle: nil, avatar: nil }
   end
 
   def fetch_slack_channels
@@ -42,6 +43,16 @@ class Workspace < ApplicationRecord
 
   def clear_slack_channels_cache
     Rails.cache.delete("workspace_#{id}_slack_channels")
+  end
+
+  def authenticated_user_id
+    return if user_token.blank?
+
+    Rails.cache.fetch("workspace_#{id}_auth_user_id", expires_in: 1.hour) do
+      slack_client.auth_test.user_id
+    end
+  rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
+    nil
   end
 
   def slack_client

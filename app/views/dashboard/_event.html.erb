@@ -13,7 +13,31 @@
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2 text-sm">
         <span class="font-semibold text-foreground"><%= workspace.resolve_user_name(event.user_id) %></span>
-        <%= link_to "##{channel.channel_name || channel.channel_id}", workspace_slack_channel_path(workspace, channel), class: "text-muted hover:text-foreground" %>
+        <% if channel.mpim? %>
+          <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex items-center -space-x-1.5" do %>
+            <% channel.member_profiles.each do |profile| %>
+              <% if profile[:avatar] %>
+                <img src="<%= profile[:avatar] %>" alt="<%= profile[:name] %>" title="<%= profile[:name] %>" class="w-4 h-4 rounded-full ring-1 ring-card">
+              <% else %>
+                <div class="w-4 h-4 rounded-full bg-secondary ring-1 ring-card" title="<%= profile[:name] %>"></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% elsif channel.dm? %>
+          <% me = workspace.resolve_user_profile(workspace.authenticated_user_id) %>
+          <% partner = channel.dm_partner_profile %>
+          <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex items-center -space-x-1.5", title: partner&.dig(:name) || channel.display_name do %>
+            <% [me, partner].compact.each do |profile| %>
+              <% if profile[:avatar] %>
+                <img src="<%= profile[:avatar] %>" alt="<%= profile[:name] %>" title="<%= profile[:name] %>" class="w-4 h-4 rounded-full ring-1 ring-card">
+              <% else %>
+                <div class="w-4 h-4 rounded-full bg-secondary ring-1 ring-card" title="<%= profile[:name] %>"></div>
+              <% end %>
+            <% end %>
+          <% end %>
+        <% else %>
+          <%= link_to "##{channel.display_name}", workspace_slack_channel_path(workspace, channel), class: "text-muted hover:text-foreground" %>
+        <% end %>
         <% if workspace.team_id.present? && event.ts.present? %>
           <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= channel.channel_id %>&message=<%= event.ts.delete(".") %>"
              class="ml-auto text-xs text-muted hover:text-foreground" title="Open in Slack">
