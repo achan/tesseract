@@ -8,14 +8,25 @@ class Workspace < ApplicationRecord
   before_save :populate_team_id, if: -> { user_token_changed? && user_token.present? }
 
   def resolve_user_name(user_id)
-    return user_id if user_id.blank? || user_token.blank?
+    resolve_user_profile(user_id)[:name]
+  end
 
-    Rails.cache.fetch("slack_user_name/#{id}/#{user_id}", expires_in: 1.hour) do
+  def resolve_user_avatar(user_id)
+    resolve_user_profile(user_id)[:avatar]
+  end
+
+  def resolve_user_profile(user_id)
+    return { name: user_id, avatar: nil } if user_id.blank? || user_token.blank?
+
+    Rails.cache.fetch("slack_user_profile/#{id}/#{user_id}", expires_in: 1.hour) do
       info = slack_client.users_info(user: user_id)
-      info.user.real_name.presence || info.user.name.presence || user_id
+      {
+        name: info.user.real_name.presence || info.user.name.presence || user_id,
+        avatar: info.user.profile.image_32.presence || info.user.profile.image_24.presence
+      }
     end
   rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
-    user_id
+    { name: user_id, avatar: nil }
   end
 
   def fetch_slack_channels
