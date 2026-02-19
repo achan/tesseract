@@ -9,7 +9,7 @@ class SlackChannel < ApplicationRecord
 
   before_save :populate_channel_name, if: -> { channel_name_unresolved? && workspace&.user_token.present? }
 
-  scope :active, -> { where(active: true) }
+  scope :visible, -> { where(hidden: false) }
   scope :channels, -> { where.not("channel_id LIKE 'D%' OR channel_id LIKE 'G%'") }
 
   def display_name

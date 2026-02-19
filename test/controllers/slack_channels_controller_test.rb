@@ -11,29 +11,6 @@ class SlackChannelsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "new renders form" do
-    get new_workspace_slack_channel_path(@workspace)
-    assert_response :success
-  end
-
-  test "create with valid params" do
-    assert_difference "SlackChannel.count", 1 do
-      post workspace_slack_channels_path(@workspace), params: {
-        slack_channel: { channel_id: "C_NEW", channel_name: "new-channel" }
-      }
-    end
-    assert_redirected_to root_path
-  end
-
-  test "create with invalid params renders new" do
-    assert_no_difference "SlackChannel.count" do
-      post workspace_slack_channels_path(@workspace), params: {
-        slack_channel: { channel_id: "" }
-      }
-    end
-    assert_response :unprocessable_entity
-  end
-
   test "edit renders form" do
     get edit_workspace_slack_channel_path(@workspace, @channel)
     assert_response :success
@@ -52,5 +29,15 @@ class SlackChannelsControllerTest < ActionDispatch::IntegrationTest
       delete workspace_slack_channel_path(@workspace, @channel)
     end
     assert_redirected_to root_path
+  end
+
+  test "toggle_hidden toggles the hidden flag" do
+    assert_not @channel.hidden?
+    patch toggle_hidden_workspace_slack_channel_path(@workspace, @channel)
+    assert_redirected_to settings_path
+    assert @channel.reload.hidden?
+
+    patch toggle_hidden_workspace_slack_channel_path(@workspace, @channel)
+    assert_not @channel.reload.hidden?
   end
 end
