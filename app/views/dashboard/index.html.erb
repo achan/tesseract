@@ -10,13 +10,13 @@
 
 <% if @action_items.any? %>
   <h2 class="text-xl font-semibold mb-4">Action Items</h2>
-  <div id="dashboard_action_items" class="space-y-2 mb-8">
+  <div id="dashboard_action_items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8">
     <% @action_items.each do |action_item| %>
       <%= render "dashboard/action_item", action_item: action_item %>
     <% end %>
   </div>
 <% else %>
-  <div id="dashboard_action_items" class="space-y-2 mb-8"></div>
+  <div id="dashboard_action_items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8"></div>
 <% end %>
 
 <div data-controller="reply-modal" data-action="keydown@window->reply-modal#closeOnKey">
