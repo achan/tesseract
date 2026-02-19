@@ -110,6 +110,13 @@ if [ -f "${MAIN_DIR}/.env" ]; then
   success ".env symlinked"
 fi
 
+# Copy .env.local if it exists
+if [ -f "${MAIN_DIR}/.env.local" ]; then
+  info "Copying .env.local from main repo..."
+  cp "${MAIN_DIR}/.env.local" .env.local
+  success ".env.local copied"
+fi
+
 # Install dependencies
 if [ -f "Gemfile" ]; then
   info "Installing dependencies with bundle..."
