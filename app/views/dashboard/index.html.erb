@@ -1,0 +1,9 @@
+<h1 class="text-xl font-semibold mb-6">Message Feed</h1>
+
+<%= turbo_stream_from "dashboard_events" %>
+
+<div id="dashboard_events" class="space-y-2">
+  <% @events.each do |event| %>
+    <%= render "dashboard/event", event: event %>
+  <% end %>
+</div>

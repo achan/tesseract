@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root "workspaces#index"
+  root "dashboard#index"
 
   resources :workspaces, except: :show do
     resources :slack_channels do

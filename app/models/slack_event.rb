@@ -6,7 +6,7 @@ class SlackEvent < ApplicationRecord
   scope :in_window, ->(start_time, end_time) { where(created_at: start_time..end_time) }
   scope :messages, -> { where(event_type: "message") }
 
-  after_create_commit :broadcast_event
+  after_create_commit :broadcast_event, :broadcast_to_dashboard
 
   private
 
@@ -16,6 +16,17 @@ class SlackEvent < ApplicationRecord
       "workspace_#{channel.workspace_id}_channel_#{channel.channel_id}_events",
       target: "events",
       partial: "slack_events/event",
+      locals: { event: self }
+    )
+  end
+
+  def broadcast_to_dashboard
+    return unless event_type == "message"
+
+    broadcast_prepend_to(
+      "dashboard_events",
+      target: "dashboard_events",
+      partial: "dashboard/event",
       locals: { event: self }
     )
   end
