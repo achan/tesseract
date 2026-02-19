@@ -5,13 +5,12 @@
   <div class="relative flex-shrink-0">
     <% if live_activity.status == "active" %>
       <span class="flex h-3 w-3">
-        <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-yellow-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
       </span>
     <% else %>
       <span class="flex h-3 w-3">
-        <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-yellow-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
       </span>
     <% end %>
   </div>
@@ -30,7 +29,7 @@
       </div>
     <% end %>
   </div>
-  <% if live_activity.status == "ending" && live_activity.ends_at %>
-    <span class="text-xs text-muted flex-shrink-0" data-countdown-target="display"></span>
-  <% end %>
+  <div class="flex-shrink-0" data-controller="elapsed" data-elapsed-since-value="<%= live_activity.created_at.iso8601 %>">
+    <span class="text-xs text-muted" data-elapsed-target="display"></span>
+  </div>
 </div>
