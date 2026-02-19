@@ -86,13 +86,6 @@ tmux rename-window -t "$SESSION_NAME":1 server
 # Start Procfile.dev processes (web server, jobs, etc.)
 tmux send-keys -t "$SESSION_NAME":1 "PORT=$PORT bin/dev" C-m
 
-# Start cloudflared tunnel in a split pane
-if [ -n "$CLOUDFLARE_TUNNEL_ID" ]; then
-  CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$CLOUDFLARE_TUNNEL_ID")
-  tmux split-window -v -t "$SESSION_NAME":1
-  tmux send-keys -t "$SESSION_NAME":1.1 "cloudflared tunnel run --token $CLOUDFLARE_TOKEN" C-m
-fi
-
 # Select the main window and the vim pane
 tmux select-window -t "$SESSION_NAME":0
 tmux select-pane -t "$SESSION_NAME":0.0
