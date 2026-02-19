@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Copies the production SQLite database into the current worktree's
+# development database, giving you real data to work with locally.
+
+MAIN_REPO="$(git worktree list --porcelain | head -1 | awk '{print $2}')"
+PROD_DB="$MAIN_REPO/storage/production.sqlite3"
+DEV_DB="storage/development.sqlite3"
+
+if [ ! -f "$PROD_DB" ]; then
+  echo "Error: production database not found at $PROD_DB" >&2
+  exit 1
+fi
+
+cp "$PROD_DB" "$DEV_DB"
+
+echo "Copied production database to $DEV_DB"
+bin/rails runner "puts \"  Workspaces: #{Workspace.count}\"; puts \"  Channels:   #{SlackChannel.count}\"; puts \"  Events:     #{SlackEvent.count}\""
