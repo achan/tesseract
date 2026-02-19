@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+set -e
+
+export RAILS_ENV=production
+export SOLID_QUEUE_IN_PUMA=1
+export PORT="${PORT:-6001}"
+
+bin/rails tailwindcss:build
+bin/rails db:prepare
+exec bin/rails server
