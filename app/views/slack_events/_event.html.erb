@@ -6,8 +6,9 @@
       <%= event.created_at.strftime("%b %d, %H:%M") %>
     </time>
   </div>
-  <% if event.event_type == "message" && event.payload.is_a?(Hash) %>
-    <div class="text-sm prose prose-sm prose-invert max-w-none"><%= render_markdown(event.payload["text"]) %></div>
+  <% body = render_event_body(event) %>
+  <% if body.present? %>
+    <div class="text-sm prose prose-sm prose-invert max-w-none"><%= body %></div>
   <% end %>
   <% if event.thread_ts.present? %>
     <span class="inline-block text-xs text-primary mt-1">Thread</span>
