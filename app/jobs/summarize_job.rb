@@ -1,9 +1,11 @@
 class SummarizeJob < ApplicationJob
   queue_as :default
 
-  def perform(workspace_id:, channel_id:, period_start: 24.hours.ago, period_end: Time.current)
+  def perform(workspace_id:, channel_id:, period_start: nil, period_end: Time.current)
     workspace = Workspace.find(workspace_id)
     channel = workspace.slack_channels.find_by!(channel_id: channel_id)
+
+    period_start ||= channel.summaries.maximum(:period_end) || 24.hours.ago
     events = channel.slack_events
       .in_window(period_start, period_end)
       .order(:created_at)
@@ -11,7 +13,7 @@ class SummarizeJob < ApplicationJob
     return if events.empty?
 
     grouped = group_by_thread(events)
-    prompt = build_prompt(grouped)
+    prompt = build_prompt(grouped, channel)
 
     result_text = call_claude(prompt)
     parsed = JSON.parse(result_text)
@@ -30,6 +32,7 @@ class SummarizeJob < ApplicationJob
         description: item["description"],
         assignee_user_id: item["assignee"],
         source_ts: item["source_ts"],
+        priority: item["priority"] || 3,
         status: "open"
       )
     end
@@ -39,6 +42,7 @@ class SummarizeJob < ApplicationJob
 
   def call_claude(prompt)
     output, status = Open3.capture2(
+      { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
       "claude", "-p", prompt,
       "--output-format", "text"
     )
@@ -62,11 +66,23 @@ class SummarizeJob < ApplicationJob
     { top_level: top_level, threads: threads }
   end
 
-  def build_prompt(grouped)
+  def build_prompt(grouped, channel)
     lines = [ "Summarize the following Slack channel activity and extract action items." ]
     lines << ""
+    lines << "For each action item, assess its priority (1-5) based on the message content:"
+    lines << "- 1: Urgent/blocking — outages, broken builds, security issues, explicit urgency"
+    lines << "- 2: High — time-sensitive requests, approaching deadlines, important decisions needed"
+    lines << "- 3: Normal — standard tasks, follow-ups, general requests"
+    lines << "- 4: Low — nice-to-haves, minor improvements, non-urgent questions"
+    lines << "- 5: Minimal — informational, no real action needed soon"
+    lines << "Use the channel priority as a baseline but adjust per-item based on content and tone."
+    lines << ""
     lines << "Return ONLY valid JSON (no markdown fences) with this structure:"
-    lines << '{ "summary": "...", "action_items": [{ "description": "...", "assignee": "user_id or null", "source_ts": "..." }] }'
+    lines << '{ "summary": "...", "action_items": [{ "description": "...", "assignee": "user_id or null", "source_ts": "...", "priority": 1-5 }] }'
+    lines << ""
+    lines << "## Channel Context"
+    lines << "Priority: #{channel.priority} (1=highest, 5=lowest)"
+    lines << "Interaction description: #{channel.interaction_description}" if channel.interaction_description.present?
     lines << ""
     lines << "## Messages"
     lines << ""
