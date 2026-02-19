@@ -4,7 +4,7 @@ class SlackEvent < ApplicationRecord
   validates :event_id, presence: true, uniqueness: true
 
   scope :in_window, ->(start_time, end_time) { where(created_at: start_time..end_time) }
-  scope :messages, -> { where(event_type: "message") }
+  scope :messages, -> { where(event_type: "message").where("json_extract(payload, '$.subtype') IS NULL OR json_extract(payload, '$.subtype') != ?", "message_changed") }
 
   after_create_commit :broadcast_event, :broadcast_to_dashboard, :enqueue_action_items_job
 
@@ -28,6 +28,7 @@ class SlackEvent < ApplicationRecord
 
   def broadcast_to_dashboard
     return unless event_type == "message"
+    return if payload&.dig("subtype") == "message_changed"
     return if slack_channel.hidden?
 
     broadcast_prepend_to(
