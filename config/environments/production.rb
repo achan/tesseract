@@ -79,6 +79,12 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
+  # Allow Action Cable connections from the tunnel and localhost
+  config.action_cable.allowed_request_origins = [
+    "https://achanbot-1.docovia.com",
+    /http:\/\/localhost.*/
+  ]
+
   # Enable DNS rebinding protection and other `Host` header attacks.
   # config.hosts = [
   #   "example.com",     # Allow requests from example.com

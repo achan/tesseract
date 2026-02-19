@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 set -e
 
@@ -6,6 +6,23 @@ export RAILS_ENV=production
 export SOLID_QUEUE_IN_PUMA=1
 export PORT="${PORT:-6001}"
 
+# Read tunnel ID from .worktreerc
+CLOUDFLARE_TUNNEL_ID=$(grep "^CLOUDFLARE_TUNNEL_ID=" .worktreerc | cut -d'=' -f2)
+
+if [ -z "$CLOUDFLARE_TUNNEL_ID" ]; then
+  echo "Error: CLOUDFLARE_TUNNEL_ID not found in .worktreerc" >&2
+  exit 1
+fi
+
 bin/rails tailwindcss:build
 bin/rails db:prepare
+
+# Start cloudflared tunnel in the background
+CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$CLOUDFLARE_TUNNEL_ID")
+cloudflared tunnel --loglevel debug --logfile cloudflared.log run --token "$CLOUDFLARE_TOKEN" &
+TUNNEL_PID=$!
+
+# Kill tunnel when the script exits
+trap "kill $TUNNEL_PID 2>/dev/null" EXIT
+
 exec bin/rails server
