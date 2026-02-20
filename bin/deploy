@@ -4,9 +4,8 @@
 # Pulls latest changes from main, runs setup, and restarts the service.
 #
 # Usage:
-#   bin/deploy              # Deploy latest main
+#   bin/deploy              # Deploy latest main (skips if up-to-date)
 #   bin/deploy --force      # Deploy even if already up-to-date
-#   bin/deploy --check      # Exit 0 if new commits available, 1 if up-to-date
 
 set -e
 
@@ -27,15 +26,6 @@ git fetch "$REMOTE" "$BRANCH" 2>>"$LOG_FILE"
 
 LOCAL_SHA=$(git rev-parse HEAD)
 REMOTE_SHA=$(git rev-parse "$REMOTE/$BRANCH")
-
-if [ "$1" = "--check" ]; then
-  if [ "$LOCAL_SHA" = "$REMOTE_SHA" ]; then
-    exit 1
-  else
-    echo "$REMOTE_SHA"
-    exit 0
-  fi
-fi
 
 if [ "$LOCAL_SHA" = "$REMOTE_SHA" ] && [ "$1" != "--force" ]; then
   log "Already up-to-date at $LOCAL_SHA"
