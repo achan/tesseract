@@ -80,7 +80,7 @@ class GenerateActionItemsJob < ApplicationJob
   end
 
   def build_prompt(grouped, channel)
-    existing_items = channel.all_action_items.open_items.order(:created_at)
+    existing_items = channel.all_action_items.order(:created_at)
 
     lines = ["Extract NEW action items from the following Slack channel activity."]
     lines << ""
@@ -103,13 +103,13 @@ class GenerateActionItemsJob < ApplicationJob
     lines << ""
 
     if existing_items.any?
-      lines << "## Existing Open Action Items"
+      lines << "## Existing Action Items"
       lines << "The following action items already exist for this channel. Do NOT duplicate these."
       lines << "Only create action items for genuinely new tasks from the messages below."
       lines << ""
       existing_items.each do |item|
         assignee = item.assignee_user_id.present? ? " (assigned to #{item.assignee_user_id})" : ""
-        lines << "- [P#{item.priority}] #{item.description}#{assignee}"
+        lines << "- [#{item.status}] [P#{item.priority}] #{item.description}#{assignee}"
       end
       lines << ""
     end
