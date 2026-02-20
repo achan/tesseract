@@ -35,6 +35,7 @@ class GenerateActionItemsJob < ApplicationJob
     update_live_activity(subtitle: "Calling Claude...")
 
     result_text = call_claude(prompt)
+    result_text = result_text.sub(/\A\s*```\w*\n/, "").sub(/\n```\s*\z/, "")
     parsed = JSON.parse(result_text)
 
     items = parsed["action_items"] || []

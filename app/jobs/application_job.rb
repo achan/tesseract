@@ -34,9 +34,10 @@ class ApplicationJob < ActiveJob::Base
     Rails.logger.warn("[LiveActivity] update failed: #{e.message}")
   end
 
-  def stop_live_activity(metadata: {})
+  def stop_live_activity(subtitle: nil, metadata: {})
     return unless @live_activity
 
+    @live_activity.subtitle = subtitle if subtitle
     @live_activity.metadata = @live_activity.metadata.merge(metadata) if metadata.present?
     @live_activity.update!(status: "ending", ends_at: 10.seconds.from_now)
     LiveActivityCleanupJob.set(wait: 10.seconds).perform_later(@live_activity.id)
