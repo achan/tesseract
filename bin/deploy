@@ -14,7 +14,7 @@ cd "$APP_DIR"
 
 BRANCH="${DEPLOY_BRANCH:-main}"
 REMOTE="${DEPLOY_REMOTE:-origin}"
-SERVICE_NAME="${DEPLOY_SERVICE:-tesseract}"
+SERVICE_LABEL="${DEPLOY_SERVICE:-com.tesseract.web}"
 LOG_FILE="${APP_DIR}/log/deploy.log"
 
 log() {
@@ -54,12 +54,12 @@ log "Preparing database..."
 RAILS_ENV=production bin/rails db:prepare 2>>"$LOG_FILE"
 
 # Restart the service
-log "Restarting $SERVICE_NAME..."
-if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
-  systemctl restart "$SERVICE_NAME"
+log "Restarting $SERVICE_LABEL..."
+if launchctl print "system/$SERVICE_LABEL" &>/dev/null; then
+  launchctl kickstart -k "system/$SERVICE_LABEL"
   log "Service restarted successfully"
 else
-  log "Warning: systemd service '$SERVICE_NAME' not running. Start it with: systemctl start $SERVICE_NAME"
+  log "Warning: launchd service '$SERVICE_LABEL' not loaded. Load it with: sudo launchctl bootstrap system /Library/LaunchDaemons/$SERVICE_LABEL.plist"
 fi
 
 log "Deploy complete: $(git rev-parse --short HEAD)"

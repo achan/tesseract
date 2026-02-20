@@ -124,30 +124,28 @@ bin/remove-worktree.sh my-feature
 
 ## Production
 
-The app runs on a remote server behind a cloudflared tunnel via
-`bin/prod`. Systemd manages the process and a GitHub webhook
-triggers auto-deploys on push.
+The app runs on a macOS server behind a cloudflared tunnel via
+`bin/prod`. A launchd service manages the process and a GitHub
+webhook triggers auto-deploys on push.
 
 ### Server setup
 
-Clone the repo on the server and populate `.env`:
+Create a dedicated `tesseract` standard (non-Admin) user on the
+Mac, then clone the repo and populate `.env`:
 
 ```sh
-git clone <repo-url> /opt/tesseract
-cd /opt/tesseract
+git clone <repo-url> /Users/tesseract/tesseract
+cd /Users/tesseract/tesseract
 cp .env.example .env
 # fill in .env values
 bin/rails db:encryption:init  # paste output into .env
 ```
 
-Edit `deploy/tesseract.service` to match your server — update
-`User`, `Group`, and all `/opt/tesseract` paths to your checkout
-location. Then install and start the service:
+Install and start the launchd service:
 
 ```sh
-sudo cp deploy/tesseract.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now tesseract
+sudo cp deploy/com.tesseract.web.plist /Library/LaunchDaemons/
+sudo launchctl bootstrap system /Library/LaunchDaemons/com.tesseract.web.plist
 ```
 
 ### Auto-deploy via GitHub webhook
@@ -174,10 +172,10 @@ service.
 ### Useful commands
 
 ```sh
-systemctl status tesseract         # app status
-journalctl -u tesseract -f         # follow app logs
-tail -f log/deploy.log             # deploy history
-bin/deploy --force                 # manual deploy
+sudo launchctl print system/com.tesseract.web  # service status
+tail -f log/production.log                      # follow app logs
+tail -f log/deploy.log                          # deploy history
+bin/deploy --force                              # manual deploy
 ```
 
 ### Configuration
@@ -188,4 +186,4 @@ bin/deploy --force                 # manual deploy
 |---|---|---|
 | `DEPLOY_BRANCH` | `main` | Branch to deploy from |
 | `DEPLOY_REMOTE` | `origin` | Git remote to fetch |
-| `DEPLOY_SERVICE` | `tesseract` | Systemd service to restart |
+| `DEPLOY_SERVICE` | `com.tesseract.web` | launchd service label to restart |

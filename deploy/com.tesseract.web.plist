@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.tesseract.web</string>
+
+  <key>UserName</key>
+  <string>tesseract</string>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/tesseract/tesseract</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/tesseract/tesseract/bin/prod</string>
+  </array>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/tesseract/tesseract/log/production.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/Users/tesseract/tesseract/log/production.log</string>
+</dict>
+</plist>
