@@ -30,6 +30,21 @@ class Workspace < ApplicationRecord
     { name: user_id, handle: nil, avatar: nil }
   end
 
+  def resolve_bot_profile(bot_id)
+    return { name: bot_id, avatar: nil } if bot_id.blank? || user_token.blank?
+
+    Rails.cache.fetch("slack_bot_profile/#{id}/#{bot_id}", expires_in: 1.hour) do
+      info = slack_client.bots_info(bot: bot_id)
+      icons = info.bot.icons.to_h
+      {
+        name: info.bot.name.presence || bot_id,
+        avatar: icons["image_36"].presence || icons["image_48"].presence
+      }
+    end
+  rescue Slack::Web::Api::Errors::SlackError, Faraday::Error
+    { name: bot_id, avatar: nil }
+  end
+
   def authenticated_user_id
     return if user_token.blank?
 

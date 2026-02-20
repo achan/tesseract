@@ -2,7 +2,12 @@
      data-controller="lightbox" data-action="keydown@window->lightbox#closeOnKey">
   <% channel = event.slack_channel %>
   <% workspace = channel.workspace %>
-  <% avatar_url = workspace.resolve_user_avatar(event.user_id) %>
+  <% if event.user_id.present? %>
+    <% sender_profile = workspace.resolve_user_profile(event.user_id) %>
+  <% else %>
+    <% sender_profile = workspace.resolve_bot_profile(event.payload&.dig("bot_id")) %>
+  <% end %>
+  <% avatar_url = sender_profile[:avatar] %>
   <div class="flex gap-3">
     <div class="flex-shrink-0 pt-0.5">
       <% if avatar_url %>
@@ -14,7 +19,7 @@
     <div class="flex-1 min-w-0">
       <div class="flex items-center gap-2 text-sm">
         <div class="flex items-center gap-2 min-w-0">
-          <span class="font-semibold text-foreground truncate"><%= workspace.resolve_user_name(event.user_id) %></span>
+          <span class="font-semibold text-foreground truncate"><%= sender_profile[:name] %></span>
           <% if channel.mpim? %>
             <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex-shrink-0 flex items-center -space-x-1.5" do %>
               <% channel.member_profiles.each do |profile| %>
@@ -45,7 +50,7 @@
           <button type="button" title="Reply"
                   data-action="reply-modal#open"
                   data-event-id="<%= event.id %>"
-                  data-author-name="<%= workspace.resolve_user_name(event.user_id) %>"
+                  data-author-name="<%= sender_profile[:name] %>"
                   data-message-preview="<%= truncate(event.payload&.dig("text") || "", length: 120) %>"
                   class="text-muted hover:text-foreground">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

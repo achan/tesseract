@@ -11,8 +11,11 @@
 
   <body class="bg-background text-foreground antialiased">
     <nav class="bg-transparent px-6 py-3 flex items-center justify-between">
-      <%= link_to root_path, class: "no-underline" do %>
+      <%= link_to root_path, class: "no-underline flex items-center gap-2" do %>
         <%= image_tag "logo.png", alt: "Tesseract", class: "h-8" %>
+        <% if Rails.env.development? %>
+          <span class="text-[0.6rem] font-semibold tracking-wider uppercase text-muted">DEV</span>
+        <% end %>
       <% end %>
       <%= link_to "Settings", settings_path, class: "text-sm text-muted no-underline hover:text-foreground" %>
     </nav>

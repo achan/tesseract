@@ -152,6 +152,8 @@ module ApplicationHelper
   def convert_slack_links(text)
     text.gsub(/<(https?:\/\/[^|>]+)\|([^>]+)>/) { "[#{$2}](#{$1})" }
         .gsub(/<(https?:\/\/[^>]+)>/) { $1 }
+        .gsub(/<mailto:([^|>]+)\|([^>]+)>/) { "[#{$2}](mailto:#{$1})" }
+        .gsub(/<mailto:([^>]+)>/) { $1 }
   end
 
   def find_emoji(name)
@@ -170,11 +172,23 @@ module ApplicationHelper
     when "rich_text"
       (block["elements"] || []).map { |el| render_block_element(el, workspace: workspace) }.join
     when "section"
-      text = block.dig("text", "text") || ""
-      type = block.dig("text", "type")
-      text = resolve_mentions(text, workspace: workspace) if type == "mrkdwn"
-      content = type == "mrkdwn" ? render_markdown(text) : h(text)
-      "<p>#{content}</p>"
+      parts = []
+      if block["text"]
+        text = block.dig("text", "text") || ""
+        type = block.dig("text", "type")
+        text = resolve_slack_formatting(text, workspace: workspace) if type == "mrkdwn"
+        parts << (type == "mrkdwn" ? render_markdown(text) : "<p>#{h(text)}</p>")
+      end
+      if block["fields"].is_a?(Array)
+        fields_html = block["fields"].map do |field|
+          text = field["text"] || ""
+          text = resolve_slack_formatting(text, workspace: workspace) if field["type"] == "mrkdwn"
+          content = field["type"] == "mrkdwn" ? render_markdown(text) : h(text)
+          %(<div>#{content}</div>)
+        end.join
+        parts << %(<div class="grid grid-cols-2 gap-x-4 gap-y-1">#{fields_html}</div>)
+      end
+      parts.join
     when "header"
       "<strong>#{h(block.dig("text", "text"))}</strong>"
     when "divider"
@@ -185,6 +199,13 @@ module ApplicationHelper
       alt = h(block["alt_text"] || "image")
       src = slack_image_src(url, workspace: workspace)
       %(<div class="mt-2"><img src="#{h(src)}" alt="#{alt}" loading="lazy" class="event-image"></div>)
+    when "actions"
+      buttons = (block["elements"] || []).filter_map do |el|
+        next unless el["type"] == "button" && el["url"].present?
+        label = h(el.dig("text", "text") || "Link")
+        %(<a href="#{h(el["url"])}" target="_blank" rel="noopener" class="inline-block text-xs px-3 py-1 rounded border border-border text-muted hover:text-foreground">#{label}</a>)
+      end
+      buttons.any? ? %(<div class="flex gap-2 mt-1">#{buttons.join}</div>) : ""
     when "context"
       items = (block["elements"] || []).map do |el|
         case el["type"]

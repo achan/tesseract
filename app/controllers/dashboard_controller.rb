@@ -7,6 +7,8 @@ class DashboardController < ApplicationController
       .where(source_type: "SlackChannel")
       .order(priority: :asc, created_at: :asc)
 
+    @overview = Overview.order(created_at: :desc).first
+
     @events = SlackEvent
       .messages
       .joins(:slack_channel).where(slack_channels: { hidden: false })
