@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+# Auto-deploy script for Tesseract
+# Pulls latest changes from main, runs setup, and restarts the service.
+#
+# Usage:
+#   bin/deploy              # Deploy latest main
+#   bin/deploy --force      # Deploy even if already up-to-date
+#   bin/deploy --check      # Exit 0 if new commits available, 1 if up-to-date
+
+set -e
+
+APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$APP_DIR"
+
+BRANCH="${DEPLOY_BRANCH:-main}"
+REMOTE="${DEPLOY_REMOTE:-origin}"
+SERVICE_NAME="${DEPLOY_SERVICE:-tesseract}"
+LOG_FILE="${APP_DIR}/log/deploy.log"
+
+log() {
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
+}
+
+# Fetch latest commits
+git fetch "$REMOTE" "$BRANCH" 2>>"$LOG_FILE"
+
+LOCAL_SHA=$(git rev-parse HEAD)
+REMOTE_SHA=$(git rev-parse "$REMOTE/$BRANCH")
+
+if [ "$1" = "--check" ]; then
+  if [ "$LOCAL_SHA" = "$REMOTE_SHA" ]; then
+    exit 1
+  else
+    echo "$REMOTE_SHA"
+    exit 0
+  fi
+fi
+
+if [ "$LOCAL_SHA" = "$REMOTE_SHA" ] && [ "$1" != "--force" ]; then
+  log "Already up-to-date at $LOCAL_SHA"
+  exit 0
+fi
+
+log "Deploying $LOCAL_SHA -> $REMOTE_SHA"
+
+# Pull latest code
+git merge "$REMOTE/$BRANCH" --ff-only 2>>"$LOG_FILE"
+
+# Install dependencies if Gemfile changed
+if ! git diff --quiet "$LOCAL_SHA" "$REMOTE_SHA" -- Gemfile Gemfile.lock 2>/dev/null; then
+  log "Gemfile changed, running bundle install..."
+  bundle install --without development test 2>>"$LOG_FILE"
+fi
+
+# Precompile assets if frontend files changed
+if ! git diff --quiet "$LOCAL_SHA" "$REMOTE_SHA" -- app/assets app/javascript app/views config/importmap.rb 2>/dev/null; then
+  log "Asset files changed, precompiling..."
+  RAILS_ENV=production bin/rails assets:precompile 2>>"$LOG_FILE"
+fi
+
+# Always run migrations (db:prepare is idempotent)
+log "Preparing database..."
+RAILS_ENV=production bin/rails db:prepare 2>>"$LOG_FILE"
+
+# Restart the service
+log "Restarting $SERVICE_NAME..."
+if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+  systemctl restart "$SERVICE_NAME"
+  log "Service restarted successfully"
+else
+  log "Warning: systemd service '$SERVICE_NAME' not running. Start it with: systemctl start $SERVICE_NAME"
+fi
+
+log "Deploy complete: $(git rev-parse --short HEAD)"

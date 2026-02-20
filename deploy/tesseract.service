@@ -1,0 +1,23 @@
+# Systemd service for Tesseract
+# Install: sudo cp deploy/tesseract.service /etc/systemd/system/
+#          sudo systemctl daemon-reload
+#          sudo systemctl enable --now tesseract
+
+[Unit]
+Description=Tesseract (Rails)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/user/tesseract
+ExecStart=/home/user/tesseract/bin/prod
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=/home/user/tesseract/.env
+
+# Logging
+StandardOutput=append:/home/user/tesseract/log/production.log
+StandardError=append:/home/user/tesseract/log/production.log
+
+[Install]
+WantedBy=multi-user.target
