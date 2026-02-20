@@ -9,8 +9,21 @@ module Api
       payload = JSON.parse(request_body)
       return head :ok unless payload["ref"] == "refs/heads/main"
 
+      commit_sha = payload["after"]
+
+      LiveActivity.find_or_initialize_by(
+        activity_type: "deploy",
+        activity_id: commit_sha
+      ).update!(
+        title: "Deploying",
+        subtitle: commit_sha[0, 7],
+        status: "active",
+        metadata: {},
+        ends_at: nil
+      )
+
       deploy_log = Rails.root.join("log/deploy.log")
-      pid = Process.spawn("bin/deploy", chdir: Rails.root.to_s, out: deploy_log.to_s, err: deploy_log.to_s)
+      pid = Process.spawn("bin/deploy", commit_sha, chdir: Rails.root.to_s, out: deploy_log.to_s, err: deploy_log.to_s)
       Process.detach(pid)
 
       head :accepted

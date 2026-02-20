@@ -62,6 +62,12 @@ class Api::DeploysControllerTest < ActionDispatch::IntegrationTest
       assert_response :accepted
       assert_not_nil spawn_args, "Expected Process.spawn to be called"
       assert_equal "bin/deploy", spawn_args[0][0]
+      assert_equal "abc123", spawn_args[0][1]
+
+      activity = LiveActivity.find_by(activity_type: "deploy", activity_id: "abc123")
+      assert_not_nil activity, "Expected a deploy LiveActivity to be created"
+      assert_equal "Deploying", activity.title
+      assert_equal "active", activity.status
     end
   end
 

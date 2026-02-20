@@ -6,22 +6,39 @@ class GenerateActionItemsJob < ApplicationJob
     return unless event
 
     channel = event.slack_channel
+
+    start_live_activity(
+      activity_type: "action_items",
+      activity_id: slack_event_id.to_s,
+      title: "Extracting action items",
+      subtitle: "##{channel.channel_name}"
+    )
+
     latest_event_id = channel.slack_events.order(created_at: :desc).pick(:id)
-    return unless latest_event_id == event.id
+    unless latest_event_id == event.id
+      stop_live_activity
+      return
+    end
 
     events = channel.slack_events
       .where("created_at > ?", 2.hours.ago)
       .order(:created_at)
 
-    return if events.empty?
+    if events.empty?
+      stop_live_activity
+      return
+    end
 
     grouped = group_by_thread(events)
     prompt = build_prompt(grouped, channel)
 
+    update_live_activity(subtitle: "Calling Claude...")
+
     result_text = call_claude(prompt)
     parsed = JSON.parse(result_text)
 
-    (parsed["action_items"] || []).each do |item|
+    items = parsed["action_items"] || []
+    items.each do |item|
       channel.action_items.create!(
         description: item["description"],
         assignee_user_id: item["assignee"],
@@ -30,6 +47,8 @@ class GenerateActionItemsJob < ApplicationJob
         status: "open"
       )
     end
+
+    stop_live_activity(metadata: { "items" => items.size })
   end
 
   private

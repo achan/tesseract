@@ -5,15 +5,27 @@ class SummarizeJob < ApplicationJob
     workspace = Workspace.find(workspace_id)
     channel = workspace.slack_channels.find_by!(channel_id: channel_id)
 
+    start_live_activity(
+      activity_type: "summarize",
+      activity_id: channel_id,
+      title: "Summarizing",
+      subtitle: "##{channel.channel_name}"
+    )
+
     period_start ||= channel.all_summaries.maximum(:period_end) || 24.hours.ago
     events = channel.slack_events
       .in_window(period_start, period_end)
       .order(:created_at)
 
-    return if events.empty?
+    if events.empty?
+      stop_live_activity
+      return
+    end
 
     grouped = group_by_thread(events)
     prompt = build_prompt(grouped, channel)
+
+    update_live_activity(subtitle: "Calling Claude...")
 
     summary_text = call_claude(prompt)
 
@@ -24,6 +36,8 @@ class SummarizeJob < ApplicationJob
       summary_text: summary_text,
       model_used: "claude-cli"
     )
+
+    stop_live_activity
   end
 
   private
