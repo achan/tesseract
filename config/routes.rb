@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   post "logout", to: "settings#logout"
 
   resources :action_items, only: :update
+  resources :overviews, only: :create
   resources :live_activities, only: :destroy
   resources :slack_replies, only: :create
 

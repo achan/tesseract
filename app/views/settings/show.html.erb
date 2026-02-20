@@ -89,6 +89,19 @@
   </div>
 </div>
 
+<div class="bg-white border border-border rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold mb-4">Actions</h2>
+  <div class="flex items-center justify-between py-2">
+    <div>
+      <span class="text-sm">Regenerate Overview</span>
+      <p class="text-xs text-muted">Generate a new cross-channel overview from the last hour of activity.</p>
+    </div>
+    <%= button_to "Generate", overviews_path, method: :post,
+          class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer",
+          data: { turbo: true } %>
+  </div>
+</div>
+
 <div class="bg-white border border-border rounded-lg p-6">
   <h2 class="text-lg font-semibold mb-4">Channels</h2>
   <p class="text-sm text-muted mb-6">

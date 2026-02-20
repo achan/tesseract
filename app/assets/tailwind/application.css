@@ -7,6 +7,72 @@
     border-radius: 0.375rem;
     cursor: zoom-in;
   }
+
+  .overview-content h2,
+  .overview-content h3 {
+    font-weight: 600;
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+  }
+
+  .overview-content h2 { font-size: 1.125rem; }
+  .overview-content h3 { font-size: 1rem; }
+  .overview-content h2:first-child,
+  .overview-content h3:first-child { margin-top: 0; }
+
+  .overview-content p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .overview-content ul,
+  .overview-content ol {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding-left: 1.5em;
+  }
+
+  .overview-content ul { list-style-type: disc; }
+  .overview-content ol { list-style-type: decimal; }
+
+  .overview-content li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
+
+  .overview-content hr {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    border-color: var(--color-border);
+  }
+
+  .overview-content a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .overview-content strong { font-weight: 600; }
+
+  .overview-content code {
+    font-size: 0.875em;
+    padding: 0.125em 0.25em;
+    border-radius: 0.25rem;
+    background: var(--color-secondary);
+  }
+
+  .overview-content pre {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+    padding: 0.75em 1em;
+    border-radius: 0.375rem;
+    background: var(--color-secondary);
+    overflow-x: auto;
+  }
+
+  .overview-content pre code {
+    padding: 0;
+    background: none;
+  }
 }
 
 @theme {

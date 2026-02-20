@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_20_200000) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_20_210648) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type"
@@ -38,6 +38,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_20_200000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["activity_type", "activity_id"], name: "index_live_activities_on_activity_type_and_activity_id", unique: true
+  end
+
+  create_table "overviews", force: :cascade do |t|
+    t.text "body", null: false
+    t.text "model_used"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "slack_channels", force: :cascade do |t|
