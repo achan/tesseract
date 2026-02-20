@@ -21,7 +21,7 @@ class SlackChannel < ApplicationRecord
   end
 
   def mpim?
-    channel_id.start_with?("G") || channel_name&.start_with?("mpdm-") || channel_name&.start_with?("Group:")
+    is_mpim? || channel_id.start_with?("G") || channel_name&.start_with?("mpdm-") || channel_name&.start_with?("Group:")
   end
 
   def dm?
@@ -116,6 +116,8 @@ class SlackChannel < ApplicationRecord
     client = workspace.slack_client
     info = client.conversations_info(channel: channel_id)
     channel = info.channel
+
+    self.is_mpim = channel.is_mpim if channel.respond_to?(:is_mpim)
 
     self.channel_name = resolve_im_name(client, channel) ||
       resolve_mpim_name(client, channel) ||

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_20_161110) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_20_200000) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type"
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_20_161110) do
     t.text "interaction_description"
     t.boolean "actionable", default: true, null: false
     t.integer "predecessor_id"
+    t.boolean "is_mpim", default: false, null: false
     t.index ["predecessor_id"], name: "index_slack_channels_on_predecessor_id"
     t.index ["workspace_id", "channel_id"], name: "index_slack_channels_on_workspace_id_and_channel_id", unique: true
     t.index ["workspace_id"], name: "index_slack_channels_on_workspace_id"

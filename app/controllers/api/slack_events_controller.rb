@@ -17,6 +17,7 @@ module Api
 
       slack_channel = @workspace.slack_channels.find_or_create_by(channel_id: channel_id) do |c|
         c.channel_name = channel_id
+        c.is_mpim = true if event["channel_type"] == "mpim"
       end
 
       event_id = parsed_payload["event_id"]
