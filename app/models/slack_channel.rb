@@ -14,6 +14,7 @@ class SlackChannel < ApplicationRecord
 
   scope :visible, -> { where(hidden: false) }
   scope :channels, -> { where.not("channel_id LIKE 'D%' OR channel_id LIKE 'G%'") }
+  scope :current, -> { left_joins(:successor).where(successor: { id: nil }) }
 
   def display_name
     channel_name.presence || channel_id

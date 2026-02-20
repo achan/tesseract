@@ -24,6 +24,14 @@ class SlackChannelTest < ActiveSupport::TestCase
     assert_equal 1, visible.count
   end
 
+  test "current scope excludes channels that have a successor" do
+    workspace = workspaces(:one)
+    current = workspace.slack_channels.current
+    assert_includes current, slack_channels(:general)
+    assert_includes current, slack_channels(:random)
+    assert_not_includes current, slack_channels(:archived_general)
+  end
+
   # --- link_predecessor ---
 
   test "link_predecessor links matching channel and copies settings" do

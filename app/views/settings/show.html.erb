@@ -10,7 +10,7 @@
   </p>
 
   <% Workspace.includes(:slack_channels).find_each do |workspace| %>
-    <% channels = workspace.slack_channels.order(:channel_name) %>
+    <% channels = workspace.slack_channels.current.order(:channel_name) %>
     <% next if channels.empty? %>
 
     <div class="mb-6">
