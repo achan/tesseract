@@ -4,6 +4,7 @@ class SummarizeJob < ApplicationJob
   def perform(workspace_id:, channel_id:, period_start: nil, period_end: Time.current)
     workspace = Workspace.find(workspace_id)
     channel = workspace.slack_channels.find_by!(channel_id: channel_id)
+    return unless channel.actionable?
 
     period_start ||= channel.summaries.maximum(:period_end) || 24.hours.ago
     events = channel.slack_events

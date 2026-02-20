@@ -5,6 +5,7 @@
     <div class="flex items-center gap-2">
       <h2 class="text-xl font-semibold">#<%= @channel.channel_name || @channel.channel_id %></h2>
       <%= render "slack_channels/star", workspace: @workspace, channel: @channel %>
+      <%= render "slack_channels/actionable", workspace: @workspace, channel: @channel %>
     </div>
     <div class="flex gap-2 items-center">
       <%= link_to "Edit", edit_workspace_slack_channel_path(@workspace, @channel),
