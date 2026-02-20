@@ -44,8 +44,8 @@ class SlackChannelTest < ActiveSupport::TestCase
     )
 
     assert_equal general.id, new_channel.predecessor_id
-    assert_equal general.hidden, new_channel.hidden
-    assert_equal general.actionable, new_channel.actionable
+    assert_equal false, new_channel.hidden
+    assert_equal true, new_channel.actionable
     assert_equal general.priority, new_channel.priority
     assert_equal general.interaction_description, new_channel.interaction_description
   end

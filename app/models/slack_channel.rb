@@ -103,8 +103,6 @@ class SlackChannel < ApplicationRecord
 
     update_columns(
       predecessor_id: predecessor_channel.id,
-      hidden: predecessor_channel.hidden,
-      actionable: predecessor_channel.actionable,
       priority: predecessor_channel.priority,
       interaction_description: predecessor_channel.interaction_description
     )

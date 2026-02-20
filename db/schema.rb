@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_20_153809) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_20_155508) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id", null: false
     t.text "source_type"
@@ -49,7 +49,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_20_153809) do
     t.boolean "hidden", default: false, null: false
     t.integer "priority", default: 3, null: false
     t.text "interaction_description"
-    t.boolean "actionable", default: false, null: false
+    t.boolean "actionable", default: true, null: false
     t.integer "predecessor_id"
     t.index ["predecessor_id"], name: "index_slack_channels_on_predecessor_id"
     t.index ["workspace_id", "channel_id"], name: "index_slack_channels_on_workspace_id_and_channel_id", unique: true

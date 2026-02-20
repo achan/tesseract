@@ -40,12 +40,12 @@ class AddPredecessorIdToSlackChannels < ActiveRecord::Migration[8.0]
             )
         SQL
 
-        # Copy settings from each predecessor to its successor.
+        # Copy priority and interaction_description from predecessor.
+        # New channels default to visible and actionable regardless of
+        # predecessor state.
         execute <<~SQL
           UPDATE slack_channels
-          SET hidden = (SELECT prev.hidden FROM slack_channels prev WHERE prev.id = slack_channels.predecessor_id),
-              actionable = (SELECT prev.actionable FROM slack_channels prev WHERE prev.id = slack_channels.predecessor_id),
-              priority = (SELECT prev.priority FROM slack_channels prev WHERE prev.id = slack_channels.predecessor_id),
+          SET priority = (SELECT prev.priority FROM slack_channels prev WHERE prev.id = slack_channels.predecessor_id),
               interaction_description = (SELECT prev.interaction_description FROM slack_channels prev WHERE prev.id = slack_channels.predecessor_id)
           WHERE predecessor_id IS NOT NULL
         SQL
