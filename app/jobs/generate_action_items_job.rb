@@ -16,7 +16,7 @@ class GenerateActionItemsJob < ApplicationJob
 
     latest_event_id = channel.slack_events.order(created_at: :desc).pick(:id)
     unless latest_event_id == event.id
-      stop_live_activity
+      stop_live_activity(subtitle: "Skipped — newer event pending")
       return
     end
 
@@ -25,7 +25,7 @@ class GenerateActionItemsJob < ApplicationJob
       .order(:created_at)
 
     if events.empty?
-      stop_live_activity
+      stop_live_activity(subtitle: "No recent messages")
       return
     end
 

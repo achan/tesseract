@@ -18,7 +18,7 @@ class SummarizeJob < ApplicationJob
       .order(:created_at)
 
     if events.empty?
-      stop_live_activity
+      stop_live_activity(subtitle: "No recent messages")
       return
     end
 
