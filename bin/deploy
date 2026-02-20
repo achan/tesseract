@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -e
+
+cd "$(dirname "$0")/.."
+
+COMMIT_SHA="${1:-}"
+API_URL="http://localhost:3000/api/live_activities"
+
+deploy_progress() {
+  [ -z "$COMMIT_SHA" ] && return
+  curl -s -X POST "$API_URL/progress" \
+    -H "Content-Type: application/json" \
+    -d "{\"activity_type\":\"deploy\",\"activity_id\":\"$COMMIT_SHA\",\"subtitle\":\"$1\"}" \
+    > /dev/null 2>&1 || true
+}
+
+deploy_stop() {
+  [ -z "$COMMIT_SHA" ] && return
+  local attempt
+  for attempt in 1 2 3; do
+    curl -s --max-time 5 -X POST "$API_URL/stop" \
+      -H "Content-Type: application/json" \
+      -d "{\"activity_type\":\"deploy\",\"activity_id\":\"$COMMIT_SHA\"}" \
+      > /dev/null 2>&1 && return
+    sleep 2
+  done
+}
+
+LOCK_DIR="tmp/deploy.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  echo "$(date '+%Y-%m-%d %H:%M:%S') Deploy already in progress, skipping"
+  exit 0
+fi
+DEPLOY_STOPPED=false
+trap '[ "$DEPLOY_STOPPED" = false ] && deploy_stop; rmdir "$LOCK_DIR"' EXIT
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') Starting deploy..."
+
+deploy_progress "Pulling latest code..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Pulling latest code..."
+git pull origin main
+
+deploy_progress "Installing dependencies..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Installing dependencies..."
+bundle install --jobs 4
+
+deploy_progress "Precompiling assets..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Precompiling assets..."
+RAILS_ENV=production bin/rails assets:precompile
+
+deploy_progress "Running migrations..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Running migrations..."
+RAILS_ENV=production bin/rails db:migrate
+
+deploy_progress "Restarting..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Restarting puma..."
+deploy_stop
+DEPLOY_STOPPED=true
+touch tmp/restart.txt
+
+echo "$(date '+%Y-%m-%d %H:%M:%S') Deploy complete."

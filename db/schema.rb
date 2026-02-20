@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_19_200000) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_20_161110) do
   create_table "action_items", force: :cascade do |t|
-    t.integer "summary_id", null: false
+    t.integer "summary_id"
     t.text "source_type"
     t.integer "source_id"
     t.text "description", null: false
@@ -49,6 +49,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_200000) do
     t.boolean "hidden", default: false, null: false
     t.integer "priority", default: 3, null: false
     t.text "interaction_description"
+    t.boolean "actionable", default: true, null: false
+    t.integer "predecessor_id"
+    t.index ["predecessor_id"], name: "index_slack_channels_on_predecessor_id"
     t.index ["workspace_id", "channel_id"], name: "index_slack_channels_on_workspace_id_and_channel_id", unique: true
     t.index ["workspace_id"], name: "index_slack_channels_on_workspace_id"
   end
@@ -91,7 +94,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_19_200000) do
     t.text "team_id"
   end
 
-  add_foreign_key "action_items", "summaries"
+  add_foreign_key "slack_channels", "slack_channels", column: "predecessor_id"
   add_foreign_key "slack_channels", "workspaces"
   add_foreign_key "slack_events", "slack_channels"
 end

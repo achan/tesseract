@@ -1,8 +1,21 @@
+archived_general:
+  workspace: one
+  channel_id: C_GENERAL_OLD
+  channel_name: general
+  hidden: true
+  actionable: true
+  priority: 2
+  interaction_description: "Engineering updates"
+
 general:
   workspace: one
   channel_id: C_GENERAL
   channel_name: general
   hidden: false
+  actionable: true
+  priority: 2
+  interaction_description: "Engineering updates"
+  predecessor: archived_general
 
 random:
   workspace: one

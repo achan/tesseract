@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Slack Summary" %></title>
+    <title><%= content_for(:title) || "Tesseract" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -10,11 +10,11 @@
   </head>
 
   <body class="bg-background text-foreground antialiased">
-    <nav class="bg-sidebar text-sidebar-foreground px-6 py-3 flex items-center justify-between">
-      <h1 class="text-lg text-white font-semibold">
-        <%= link_to "Slack Summary", root_path, class: "text-inherit no-underline" %>
-      </h1>
-      <%= link_to "Settings", settings_path, class: "text-sm text-sidebar-foreground no-underline hover:text-white" %>
+    <nav class="bg-transparent px-6 py-3 flex items-center justify-between">
+      <%= link_to root_path, class: "no-underline" do %>
+        <%= image_tag "logo.png", alt: "Tesseract", class: "h-8" %>
+      <% end %>
+      <%= link_to "Settings", settings_path, class: "text-sm text-muted no-underline hover:text-foreground" %>
     </nav>
 
     <main class="p-8 overflow-y-auto">

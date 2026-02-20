@@ -1,4 +1,4 @@
-<% content_for(:title, "Dashboard — Slack Summary") %>
+<% content_for(:title, "Dashboard — Tesseract") %>
 
 <div>
   <div class="flex items-center justify-between mb-6">
@@ -23,7 +23,7 @@
           </div>
         </div>
         <ul class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
-          <% workspace.slack_channels.visible.channels.order(:channel_name).each do |channel| %>
+          <% workspace.slack_channels.visible.channels.current.order(:channel_name).each do |channel| %>
             <li>
               <%= link_to workspace_slack_channel_path(workspace, channel),
                     class: "block p-4 bg-background border border-border rounded-md no-underline text-foreground hover:border-primary transition-colors" do %>

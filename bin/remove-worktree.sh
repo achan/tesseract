@@ -8,7 +8,7 @@
 # Example: remove-worktree.sh my-feature
 #
 # This will:
-# - Remove the git worktree at ~/repos/slack-summary-worktrees/<name>
+# - Remove the git worktree at ~/repos/tesseract-worktrees/<name>
 # - Clean up git metadata
 
 set -e  # Exit on error
@@ -49,7 +49,7 @@ if [ $# -lt 1 ]; then
 fi
 
 NAME="$1"
-WORKTREE_DIR="$HOME/repos/slack-summary-worktrees/$NAME"
+WORKTREE_DIR="$HOME/repos/tesseract-worktrees/$NAME"
 
 # Validate we're in a git repo
 if ! git rev-parse --is-inside-work-tree &> /dev/null; then

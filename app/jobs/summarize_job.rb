@@ -5,37 +5,39 @@ class SummarizeJob < ApplicationJob
     workspace = Workspace.find(workspace_id)
     channel = workspace.slack_channels.find_by!(channel_id: channel_id)
 
-    period_start ||= channel.summaries.maximum(:period_end) || 24.hours.ago
+    start_live_activity(
+      activity_type: "summarize",
+      activity_id: channel_id,
+      title: "Summarizing",
+      subtitle: "##{channel.channel_name}"
+    )
+
+    period_start ||= channel.all_summaries.maximum(:period_end) || 24.hours.ago
     events = channel.slack_events
       .in_window(period_start, period_end)
       .order(:created_at)
 
-    return if events.empty?
+    if events.empty?
+      stop_live_activity(subtitle: "No recent messages")
+      return
+    end
 
     grouped = group_by_thread(events)
     prompt = build_prompt(grouped, channel)
 
-    result_text = call_claude(prompt)
-    parsed = JSON.parse(result_text)
+    update_live_activity(subtitle: "Calling Claude...")
 
-    summary = Summary.create!(
+    summary_text = call_claude(prompt)
+
+    Summary.create!(
       source: channel,
       period_start: period_start,
       period_end: period_end,
-      summary_text: parsed["summary"],
+      summary_text: summary_text,
       model_used: "claude-cli"
     )
 
-    (parsed["action_items"] || []).each do |item|
-      summary.action_items.create!(
-        source: channel,
-        description: item["description"],
-        assignee_user_id: item["assignee"],
-        source_ts: item["source_ts"],
-        priority: item["priority"] || 3,
-        status: "open"
-      )
-    end
+    stop_live_activity
   end
 
   private
@@ -67,35 +69,10 @@ class SummarizeJob < ApplicationJob
   end
 
   def build_prompt(grouped, channel)
-    existing_items = channel.action_items.open_items.order(:created_at)
-
-    lines = [ "Summarize the following Slack channel activity and extract NEW action items." ]
+    lines = ["Summarize the following Slack channel activity."]
     lines << ""
-    lines << "For each action item, assess its priority (1-5) based on the message content:"
-    lines << "- 1: Urgent/blocking — outages, broken builds, security issues, explicit urgency"
-    lines << "- 2: High — time-sensitive requests, approaching deadlines, important decisions needed"
-    lines << "- 3: Normal — standard tasks, follow-ups, general requests"
-    lines << "- 4: Low — nice-to-haves, minor improvements, non-urgent questions"
-    lines << "- 5: Minimal — informational, no real action needed soon"
-    lines << "Use the channel priority as a baseline but adjust per-item based on content and tone."
+    lines << "Return ONLY the summary text, no JSON, no markdown fences."
     lines << ""
-    lines << "Return ONLY valid JSON (no markdown fences) with this structure:"
-    lines << '{ "summary": "...", "action_items": [{ "description": "...", "assignee": "user_id or null", "source_ts": "...", "priority": 1-5 }] }'
-    lines << "You may return zero, one, or multiple action items — include as many as are warranted by the messages."
-    lines << ""
-
-    if existing_items.any?
-      lines << "## Existing Open Action Items"
-      lines << "The following action items already exist for this channel. Do NOT duplicate these."
-      lines << "Only create action items for genuinely new tasks from the messages below."
-      lines << ""
-      existing_items.each do |item|
-        assignee = item.assignee_user_id.present? ? " (assigned to #{item.assignee_user_id})" : ""
-        lines << "- [P#{item.priority}] #{item.description}#{assignee}"
-      end
-      lines << ""
-    end
-
     lines << "## Channel Context"
     lines << "Priority: #{channel.priority} (1=highest, 5=lowest)"
     lines << "Interaction description: #{channel.interaction_description}" if channel.interaction_description.present?
@@ -103,6 +80,11 @@ class SummarizeJob < ApplicationJob
     lines << "## Messages"
     lines << ""
 
+    append_messages(lines, grouped)
+    lines.join("\n")
+  end
+
+  def append_messages(lines, grouped)
     grouped[:top_level].each do |event|
       text = event.payload.is_a?(Hash) ? event.payload["text"] : ""
       lines << "[#{event.ts}] #{event.user_id}: #{text}"
@@ -115,7 +97,5 @@ class SummarizeJob < ApplicationJob
         end
       end
     end
-
-    lines.join("\n")
   end
 end

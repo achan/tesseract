@@ -8,7 +8,7 @@
 # Example: create-worktree.sh my-feature
 #
 # This will:
-# - Create git worktree at ~/repos/slack-summary-worktrees/<name>
+# - Create git worktree at ~/repos/tesseract-worktrees/<name>
 # - Symlink environment files from the main repo
 # - Install dependencies (bundle)
 
@@ -46,14 +46,14 @@ if [ $# -lt 1 ]; then
   echo "Example: $0 my-feature"
   echo ""
   echo "This will automatically:"
-  echo "  - Create worktree at ~/repos/slack-summary-worktrees/<name>"
+  echo "  - Create worktree at ~/repos/tesseract-worktrees/<name>"
   echo "  - Set up environment and dependencies"
   exit 1
 fi
 
 NAME="$1"
 MAIN_DIR="$PWD"
-WORKTREE_DIR="$HOME/repos/slack-summary-worktrees/$NAME"
+WORKTREE_DIR="$HOME/repos/tesseract-worktrees/$NAME"
 
 # Validate we're in a git repo
 if ! git rev-parse --is-inside-work-tree &> /dev/null; then
@@ -76,9 +76,9 @@ info "Worktree directory: ${WORKTREE_DIR}"
 echo ""
 
 # Create worktree parent directory if it doesn't exist
-if [ ! -d "$HOME/repos/slack-summary-worktrees" ]; then
-  info "Creating worktree parent directory: ~/repos/slack-summary-worktrees"
-  mkdir -p "$HOME/repos/slack-summary-worktrees"
+if [ ! -d "$HOME/repos/tesseract-worktrees" ]; then
+  info "Creating worktree parent directory: ~/repos/tesseract-worktrees"
+  mkdir -p "$HOME/repos/tesseract-worktrees"
   success "Directory created"
 fi
 
@@ -125,6 +125,14 @@ if [ -f "Gemfile" ]; then
   else
     warning "bundle install had warnings (check output above)"
   fi
+fi
+
+# Reset database and clone production data
+info "Resetting database and cloning production data..."
+if DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rails db:reset && ./bin/clone-prod-db; then
+  success "Database reset and production data cloned"
+else
+  warning "Database setup had issues (check output above)"
 fi
 
 # Final instructions

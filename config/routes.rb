@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   resources :workspaces, except: :show do
     resources :slack_channels, except: [:index, :new, :create] do
       patch :toggle_hidden, on: :member
+      patch :toggle_actionable, on: :member
     end
     get "files/:file_id/proxy", to: "slack_files#show", as: :slack_file_proxy
   end
@@ -18,6 +19,7 @@ Rails.application.routes.draw do
   namespace :api do
     post "slack/events", to: "slack_events#create"
     post "summaries/generate", to: "summaries#generate"
+    post "deploy", to: "deploys#create"
 
     resources :live_activities, only: [:index] do
       collection do

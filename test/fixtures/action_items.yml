@@ -25,3 +25,10 @@ old_done_item:
   description: "Old done task"
   status: done
   created_at: <%= 5.days.ago.iso8601 %>
+
+archived_open_item:
+  summary: archived_summary
+  source: archived_general (SlackChannel)
+  description: "Archived open task"
+  status: open
+  created_at: <%= 10.days.ago.iso8601 %>

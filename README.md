@@ -1,4 +1,4 @@
-# Slack Summary
+# Tesseract
 
 Multi-workspace Slack event ingestion, summarization, and action-item
 extraction. Built on Rails 8 with SQLite, running locally behind a
@@ -62,7 +62,7 @@ Clone the repo and install dependencies:
 
 ```sh
 git clone <repo-url>
-cd slack-summary
+cd tesseract
 bin/setup --skip-server
 ```
 
@@ -96,7 +96,7 @@ From the main repo directory:
 bin/create-worktree.sh my-feature
 ```
 
-This creates a worktree at `~/repos/slack-summary-worktrees/my-feature`
+This creates a worktree at `~/repos/tesseract-worktrees/my-feature`
 on a new `feature/my-feature` branch, symlinks your `.env`, and runs
 `bundle install`.
 
@@ -121,3 +121,44 @@ From the main repo directory:
 ```sh
 bin/remove-worktree.sh my-feature
 ```
+
+## Production
+
+### Starting the server
+
+`bin/prod` runs the Rails server in production mode with Solid Queue
+embedded in puma. It reads `CLOUDFLARE_TUNNEL_ID` from `.worktreerc`
+to start a cloudflared tunnel automatically.
+
+```sh
+bin/prod
+```
+
+The server listens on port 6001 by default (override with `PORT`).
+
+### Auto-deploy
+
+Pushes to `main` can automatically trigger a deploy via a GitHub
+webhook. The Rails app exposes `POST /api/deploy` which verifies the
+request signature, then runs `bin/deploy` in the background. The
+deploy script pulls the latest code, installs dependencies,
+precompiles assets, runs migrations, and restarts puma via
+`tmp/restart.txt`.
+
+#### Setup
+
+1. Add `GITHUB_WEBHOOK_SECRET` to your `.env` with a random secret:
+
+   ```sh
+   echo "GITHUB_WEBHOOK_SECRET=$(openssl rand -hex 32)" >> .env
+   ```
+
+2. In your GitHub repo, go to **Settings > Webhooks > Add webhook**:
+   - **Payload URL:** `https://<your-tunnel-host>/api/deploy`
+   - **Content type:** `application/json`
+   - **Secret:** the value of `GITHUB_WEBHOOK_SECRET` from step 1
+   - **Events:** "Just the push event"
+
+Deploys are serialized — if one is already running, a concurrent push
+is skipped since the running deploy will pull the latest `HEAD`.
+Output is logged to `log/deploy.log`.

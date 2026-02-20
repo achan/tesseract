@@ -1,4 +1,4 @@
-# Slack Summary — Architecture
+# Tesseract — Architecture
 
 Multi-workspace Slack event ingestion, summarization, and action-item extraction.
 Built on Rails 8 (API-only + SQLite) running locally behind a cloudflared tunnel,

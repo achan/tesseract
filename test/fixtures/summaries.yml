@@ -12,3 +12,11 @@ old_summary:
   summary_text: "Old summary."
   model_used: claude-sonnet-4-5-20250929
   created_at: <%= 5.days.ago.iso8601 %>
+
+archived_summary:
+  source: archived_general (SlackChannel)
+  period_start: <%= 15.days.ago.iso8601 %>
+  period_end: <%= 10.days.ago.iso8601 %>
+  summary_text: "Archived channel summary."
+  model_used: claude-sonnet-4-5-20250929
+  created_at: <%= 10.days.ago.iso8601 %>

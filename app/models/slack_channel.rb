@@ -1,5 +1,7 @@
 class SlackChannel < ApplicationRecord
   belongs_to :workspace
+  belongs_to :predecessor, class_name: "SlackChannel", optional: true
+  has_one :successor, class_name: "SlackChannel", foreign_key: :predecessor_id, dependent: :nullify
 
   has_many :slack_events, dependent: :destroy
   has_many :summaries, as: :source, dependent: :destroy
@@ -8,16 +10,18 @@ class SlackChannel < ApplicationRecord
   validates :channel_id, presence: true, uniqueness: { scope: :workspace_id }
 
   before_save :populate_channel_name, if: -> { channel_name_unresolved? && workspace&.user_token.present? }
+  after_create :link_predecessor
 
   scope :visible, -> { where(hidden: false) }
   scope :channels, -> { where.not("channel_id LIKE 'D%' OR channel_id LIKE 'G%'") }
+  scope :current, -> { left_joins(:successor).where(successor: { id: nil }) }
 
   def display_name
     channel_name.presence || channel_id
   end
 
   def mpim?
-    channel_id.start_with?("G") || channel_name&.start_with?("mpdm-")
+    channel_id.start_with?("G") || channel_name&.start_with?("mpdm-") || channel_name&.start_with?("Group:")
   end
 
   def dm?
@@ -48,7 +52,61 @@ class SlackChannel < ApplicationRecord
     []
   end
 
+  # --- Channel chain traversal ---
+
+  def predecessor_chain
+    chain = []
+    current = predecessor
+    while current
+      chain << current
+      current = current.predecessor
+    end
+    chain
+  end
+
+  def channel_chain
+    [self] + predecessor_chain
+  end
+
+  def channel_chain_ids
+    channel_chain.map(&:id)
+  end
+
+  # --- Aggregated queries across merged channel chain ---
+
+  def all_slack_events
+    SlackEvent.where(slack_channel_id: channel_chain_ids)
+  end
+
+  def all_summaries
+    Summary.where(source_type: "SlackChannel", source_id: channel_chain_ids)
+  end
+
+  def all_action_items
+    ActionItem.where(source_type: "SlackChannel", source_id: channel_chain_ids)
+  end
+
   private
+
+  def link_predecessor
+    return if channel_name.blank? || channel_name == channel_id || dm? || mpim?
+
+    predecessor_channel = SlackChannel
+      .where(workspace_id: workspace_id, channel_name: channel_name)
+      .where.not(id: id)
+      .left_joins(:successor)
+      .where(successor: { id: nil })
+      .order(created_at: :desc)
+      .first
+
+    return unless predecessor_channel
+
+    update_columns(
+      predecessor_id: predecessor_channel.id,
+      priority: predecessor_channel.priority,
+      interaction_description: predecessor_channel.interaction_description
+    )
+  end
 
   def channel_name_unresolved?
     channel_name.blank? || channel_name == channel_id

@@ -4,7 +4,7 @@ require "rails/all"
 
 Bundler.require(*Rails.groups)
 
-module SlackSummary
+module Tesseract
   class Application < Rails::Application
     config.load_defaults 8.0
 
