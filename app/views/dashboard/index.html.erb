@@ -1,5 +1,6 @@
 <%= turbo_stream_from "dashboard_live_activities" %>
 <%= turbo_stream_from "dashboard_action_items" %>
+<%= turbo_stream_from "dashboard_overview" %>
 <%= turbo_stream_from "dashboard_events" %>
 
 <div id="dashboard_live_activities" class="overflow-x-auto pb-2 whitespace-nowrap mb-6">
@@ -8,16 +9,19 @@
   <% end %>
 </div>
 
-<% if @action_items.any? %>
-  <h2 class="text-xl font-semibold mb-4">Action Items</h2>
-  <div id="dashboard_action_items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8">
+<div data-controller="item-count">
+  <h2 class="text-xl font-semibold mb-4">Action Items<span data-item-count-target="count"><%= " (#{@action_items.size})" if @action_items.any? %></span></h2>
+  <div id="dashboard_action_items" data-item-count-target="items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8">
     <% @action_items.each do |action_item| %>
       <%= render "dashboard/action_item", action_item: action_item %>
     <% end %>
   </div>
-<% else %>
-  <div id="dashboard_action_items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8"></div>
-<% end %>
+</div>
+
+<div class="mb-8">
+  <h2 class="text-xl font-semibold mb-4">Overview</h2>
+  <%= render "dashboard/overview", overview: @overview %>
+</div>
 
 <div data-controller="reply-modal" data-action="keydown@window->reply-modal#closeOnKey">
   <h1 class="text-xl font-semibold mb-6">Message Feed</h1>
