@@ -22,17 +22,27 @@
   </div>
   <p class="text-sm mb-1 line-clamp-3"><%= action_item.description %></p>
   <div class="mt-auto">
-    <% if action_item.assignee_user_id.present? %>
-      <span class="text-xs text-muted">Assigned: <%= action_item.assignee_user_id %></span>
-    <% end %>
+    <div class="flex items-center gap-2 text-xs text-muted mb-2">
+      <% if action_item.assignee_user_id.present? %>
+        <span>Assigned: <%= action_item.assignee_user_id %></span>
+      <% end %>
+      <time datetime="<%= action_item.created_at.iso8601 %>" data-controller="local-time-display"><%= action_item.created_at.strftime("%b %-d, %l:%M %p") %></time>
+    </div>
     <% if action_item.status == "open" %>
-      <div class="flex gap-2 mt-2">
+      <div class="flex gap-2">
         <%= button_to "Done", action_item_path(action_item), method: :patch,
               params: { action_item: { status: "done" } },
               class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 cursor-pointer",
               data: { turbo: true } %>
         <%= button_to "Acknowledge", action_item_path(action_item), method: :patch,
               params: { action_item: { status: "dismissed" } },
+              class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer",
+              data: { turbo: true } %>
+      </div>
+    <% else %>
+      <div class="flex gap-2">
+        <%= button_to "Reopen", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "open" } },
               class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer",
               data: { turbo: true } %>
       </div>

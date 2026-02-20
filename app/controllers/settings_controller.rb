@@ -17,7 +17,8 @@ class SettingsController < ApplicationController
       .where.not(finished_at: nil)
       .maximum(:finished_at)
 
-    active_activities = LiveActivity.where(status: "active").count
+    in_progress_jobs = SolidQueue::ClaimedExecution.count
+    total_queued = SolidQueue::ReadyExecution.count
 
     db_path = ActiveRecord::Base.connection_db_config.database
     db_size = File.exist?(db_path) ? File.size(db_path) : nil
@@ -34,8 +35,7 @@ class SettingsController < ApplicationController
         failed: SolidQueue::FailedExecution.joins(:job).where(solid_queue_jobs: { class_name: "GenerateActionItemsJob" }).count
       },
       cleanup: { last_run: last_cleanup_run },
-      live_activities: { active_count: active_activities },
-      queue: { workers_alive: queue_processes.count, failed_jobs: failed_jobs },
+      queue: { workers_alive: queue_processes.count, failed_jobs: failed_jobs, in_progress: in_progress_jobs, queued: total_queued },
       database: { size: db_size }
     }
   end

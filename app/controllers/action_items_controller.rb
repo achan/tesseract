@@ -1,4 +1,11 @@
 class ActionItemsController < ApplicationController
+  def index
+    @action_items = ActionItem
+      .where(source_type: "SlackChannel")
+      .includes(source: :workspace)
+      .order(Arel.sql("CASE status WHEN 'open' THEN 0 WHEN 'done' THEN 1 WHEN 'dismissed' THEN 2 END"), created_at: :desc)
+  end
+
   def update
     @action_item = ActionItem.find(params[:id])
     @action_item.update!(action_item_params)

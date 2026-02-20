@@ -21,7 +21,7 @@
         <div class="flex items-center gap-2 min-w-0">
           <span class="font-semibold text-foreground truncate"><%= sender_profile[:name] %></span>
           <% if channel.mpim? %>
-            <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex-shrink-0 flex items-center -space-x-1.5" do %>
+            <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex-shrink-0 flex items-center -space-x-1.5 hover:space-x-0.5 [&>*+*]:transition-[margin] [&>*+*]:duration-200" do %>
               <% channel.member_profiles.each do |profile| %>
                 <% if profile[:avatar] %>
                   <img src="<%= profile[:avatar] %>" alt="<%= profile[:name] %>" title="<%= profile[:name] %>" class="w-4 h-4 rounded-full ring-1 ring-card">
@@ -33,7 +33,7 @@
           <% elsif channel.dm? %>
             <% me = workspace.resolve_user_profile(workspace.authenticated_user_id) %>
             <% partner = channel.dm_partner_profile %>
-            <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex-shrink-0 flex items-center -space-x-1.5", title: partner&.dig(:name) || channel.display_name do %>
+            <%= link_to workspace_slack_channel_path(workspace, channel), class: "flex-shrink-0 flex items-center -space-x-1.5 hover:space-x-0.5 [&>*+*]:transition-[margin] [&>*+*]:duration-200", title: partner&.dig(:name) || channel.display_name do %>
               <% [me, partner].compact.each do |profile| %>
                 <% if profile[:avatar] %>
                   <img src="<%= profile[:avatar] %>" alt="<%= profile[:name] %>" title="<%= profile[:name] %>" class="w-4 h-4 rounded-full ring-1 ring-card">

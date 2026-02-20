@@ -10,7 +10,7 @@
 </div>
 
 <div data-controller="item-count">
-  <h2 class="text-xl font-semibold mb-4">Action Items<span data-item-count-target="count"><%= " (#{@action_items.size})" if @action_items.any? %></span></h2>
+  <h2 class="text-xl font-semibold mb-4"><%= link_to "Action Items", action_items_path, class: "hover:underline" %><span data-item-count-target="count"><%= " (#{@action_items.size})" if @action_items.any? %></span></h2>
   <div id="dashboard_action_items" data-item-count-target="items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8">
     <% @action_items.each do |action_item| %>
       <%= render "dashboard/action_item", action_item: action_item %>
