@@ -127,6 +127,14 @@ if [ -f "Gemfile" ]; then
   fi
 fi
 
+# Reset database and clone production data
+info "Resetting database and cloning production data..."
+if DISABLE_DATABASE_ENVIRONMENT_CHECK=1 bundle exec rails db:reset && ./bin/clone-prod-db; then
+  success "Database reset and production data cloned"
+else
+  warning "Database setup had issues (check output above)"
+fi
+
 # Final instructions
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════════════════════${NC}"
