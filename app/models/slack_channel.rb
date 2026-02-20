@@ -21,7 +21,7 @@ class SlackChannel < ApplicationRecord
   end
 
   def mpim?
-    channel_id.start_with?("G") || channel_name&.start_with?("mpdm-")
+    channel_id.start_with?("G") || channel_name&.start_with?("mpdm-") || channel_name&.start_with?("Group:")
   end
 
   def dm?

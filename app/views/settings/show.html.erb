@@ -18,10 +18,9 @@
       <ul class="divide-y divide-gray-100">
         <% channels.each do |channel| %>
           <li class="flex items-center justify-between py-2">
-            <span class="text-sm"><%= channel.display_name %></span>
+            <%= link_to channel.display_name, workspace_slack_channel_path(workspace, channel),
+                  class: "text-sm hover:underline" %>
             <div class="flex items-center gap-2">
-              <%= link_to "Edit", edit_workspace_slack_channel_path(workspace, channel),
-                    class: "text-xs text-muted hover:text-foreground" %>
               <%= render "slack_channels/star", workspace: workspace, channel: channel %>
               <%= render "slack_channels/actionable", workspace: workspace, channel: channel %>
             </div>

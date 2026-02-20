@@ -2,11 +2,17 @@ development:
   daily_cleanup:
     class: CleanupJob
     schedule: at 3am every day
+  daily_summarize:
+    class: DailySummarizeJob
+    schedule: "0 6 * * * America/New_York"
 
 production:
   daily_cleanup:
     class: CleanupJob
     schedule: at 3am every day
+  daily_summarize:
+    class: DailySummarizeJob
+    schedule: "0 6 * * * America/New_York"
 
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
