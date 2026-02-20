@@ -1,12 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static values = { since: String }
+  static values = { since: String, stoppedAt: String }
   static targets = ["display"]
 
   connect() {
     this.update()
-    this.interval = setInterval(() => this.update(), 1000)
+    if (!this.hasStoppedAtValue || !this.stoppedAtValue) {
+      this.interval = setInterval(() => this.update(), 1000)
+    }
   }
 
   disconnect() {
@@ -14,7 +16,8 @@ export default class extends Controller {
   }
 
   update() {
-    const elapsed = Math.max(0, Math.floor((Date.now() - new Date(this.sinceValue)) / 1000))
+    const end = this.hasStoppedAtValue && this.stoppedAtValue ? new Date(this.stoppedAtValue) : Date.now()
+    const elapsed = Math.max(0, Math.floor((end - new Date(this.sinceValue)) / 1000))
     const hours = Math.floor(elapsed / 3600)
     const minutes = Math.floor((elapsed % 3600) / 60)
     const seconds = elapsed % 60

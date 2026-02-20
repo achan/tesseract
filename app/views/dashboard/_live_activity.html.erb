@@ -31,7 +31,8 @@
       <% end %>
     </div>
   <% end %>
-  <span class="text-xs text-muted" data-controller="elapsed" data-elapsed-since-value="<%= live_activity.created_at.iso8601 %>">
+  <span class="text-xs text-muted" data-controller="elapsed" data-elapsed-since-value="<%= live_activity.created_at.iso8601 %>"
+    <% if live_activity.status == "ending" %>data-elapsed-stopped-at-value="<%= live_activity.updated_at.iso8601 %>"<% end %>>
     <span data-elapsed-target="display"></span>
   </span>
 </div>
