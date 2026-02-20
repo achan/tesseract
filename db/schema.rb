@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_20_155508) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_20_161110) do
   create_table "action_items", force: :cascade do |t|
-    t.integer "summary_id", null: false
+    t.integer "summary_id"
     t.text "source_type"
     t.integer "source_id"
     t.text "description", null: false
@@ -94,7 +94,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_20_155508) do
     t.text "team_id"
   end
 
-  add_foreign_key "action_items", "summaries"
   add_foreign_key "slack_channels", "slack_channels", column: "predecessor_id"
   add_foreign_key "slack_channels", "workspaces"
   add_foreign_key "slack_events", "slack_channels"

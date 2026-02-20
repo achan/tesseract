@@ -1,5 +1,5 @@
 class ActionItem < ApplicationRecord
-  belongs_to :summary
+  belongs_to :summary, optional: true
   belongs_to :source, polymorphic: true
 
   validates :description, presence: true
