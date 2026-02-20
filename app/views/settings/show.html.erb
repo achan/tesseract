@@ -60,21 +60,17 @@
       </span>
     </div>
 
-    <%# Live activities %>
-    <div class="flex items-center justify-between py-2">
-      <span class="text-sm">Live Activities</span>
-      <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(:gray) %>
-        <%= @health[:live_activities][:active_count] > 0 ? "#{@health[:live_activities][:active_count]} active" : "None" %>
-      </span>
-    </div>
-
     <%# Queue health %>
     <div class="flex items-center justify-between py-2">
-      <span class="text-sm">Queue Workers</span>
+      <span class="text-sm flex items-center gap-1">
+        Queue Health
+        <%= link_to mission_control_jobs_path, class: "text-muted hover:text-foreground" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <% end %>
+      </span>
       <span class="text-sm text-muted flex items-center gap-2">
         <%= health_dot(@health[:queue][:workers_alive] > 0 ? :green : :red) %>
-        <%= @health[:queue][:workers_alive] %> alive<%= @health[:queue][:failed_jobs] > 0 ? " · #{@health[:queue][:failed_jobs]} failed jobs" : "" %>
+        <%= @health[:queue][:in_progress] %> in progress · <%= @health[:queue][:queued] %> queued<%= @health[:queue][:failed_jobs] > 0 ? " · #{@health[:queue][:failed_jobs]} failed" : "" %>
       </span>
     </div>
 
