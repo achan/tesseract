@@ -2,6 +2,93 @@
 
 <h1 class="text-2xl font-bold mb-6">Settings</h1>
 
+<div class="bg-white border border-border rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold mb-4">System Health</h2>
+
+  <div class="divide-y divide-gray-100">
+    <%# Deploy endpoint %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Deploy Endpoint</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <% if @health[:deploy][:configured] %>
+          <%= health_dot(:green) %>
+          Configured<%= @health[:deploy][:last_deploy] ? " · last deploy #{short_time_ago(@health[:deploy][:last_deploy])} ago" : "" %>
+        <% else %>
+          <%= health_dot(:red) %>
+          Not configured
+        <% end %>
+      </span>
+    </div>
+
+    <%# Slack events %>
+    <% event_status, event_text = health_time_status(@health[:slack_events][:last_received]) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Slack Events</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(event_status) %>
+        Last received <%= event_text %>
+      </span>
+    </div>
+
+    <%# Summarization %>
+    <% sum_status, sum_text = health_time_status(@health[:summarization][:last_run], green_threshold: 24.hours, yellow_threshold: 72.hours) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Summarization</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(sum_status) %>
+        Last run <%= sum_text %><%= @health[:summarization][:failed] > 0 ? " · #{@health[:summarization][:failed]} failed" : "" %>
+      </span>
+    </div>
+
+    <%# Action items %>
+    <% ai_status, ai_text = health_time_status(@health[:action_items][:last_run], green_threshold: 24.hours, yellow_threshold: 72.hours) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Action Items</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(ai_status) %>
+        Last run <%= ai_text %><%= @health[:action_items][:failed] > 0 ? " · #{@health[:action_items][:failed]} failed" : "" %>
+      </span>
+    </div>
+
+    <%# Cleanup %>
+    <% cleanup_status, cleanup_text = health_time_status(@health[:cleanup][:last_run], green_threshold: 25.hours, yellow_threshold: 48.hours) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Cleanup Job</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(cleanup_status) %>
+        Last run <%= cleanup_text %>
+      </span>
+    </div>
+
+    <%# Live activities %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Live Activities</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(:gray) %>
+        <%= @health[:live_activities][:active_count] > 0 ? "#{@health[:live_activities][:active_count]} active" : "None" %>
+      </span>
+    </div>
+
+    <%# Queue health %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Queue Workers</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(@health[:queue][:workers_alive] > 0 ? :green : :red) %>
+        <%= @health[:queue][:workers_alive] %> alive<%= @health[:queue][:failed_jobs] > 0 ? " · #{@health[:queue][:failed_jobs]} failed jobs" : "" %>
+      </span>
+    </div>
+
+    <%# Database size %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Database Size</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= health_dot(:gray) %>
+        <%= @health[:database][:size] ? number_to_human_size(@health[:database][:size]) : "Unknown" %>
+      </span>
+    </div>
+  </div>
+</div>
+
 <div class="bg-white border border-border rounded-lg p-6">
   <h2 class="text-lg font-semibold mb-4">Channels</h2>
   <p class="text-sm text-muted mb-6">
