@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   namespace :api do
     post "slack/events", to: "slack_events#create"
     post "summaries/generate", to: "summaries#generate"
+    post "deploy", to: "deploys#create"
 
     resources :live_activities, only: [:index] do
       collection do
