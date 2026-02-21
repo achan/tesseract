@@ -3,6 +3,8 @@ class CleanupJob < ApplicationJob
 
   RETENTION_PERIOD = 3.months
 
+  WONT_FIX_ARCHIVE_AFTER = 36.hours
+
   def perform
     start_live_activity(
       activity_type: "cleanup",
@@ -11,11 +13,15 @@ class CleanupJob < ApplicationJob
     )
 
     cutoff = RETENTION_PERIOD.ago
-
     events_deleted = SlackEvent.where("created_at < ?", cutoff).delete_all
 
-    Rails.logger.info("[CleanupJob] Deleted: #{events_deleted} events")
+    wont_fix_archived = ActionItem.active
+      .where(status: "wont_fix")
+      .where("updated_at < ?", WONT_FIX_ARCHIVE_AFTER.ago)
+      .update_all(archived_at: Time.current)
 
-    stop_live_activity(metadata: { "events_deleted" => events_deleted })
+    Rails.logger.info("[CleanupJob] Deleted: #{events_deleted} events, auto-archived: #{wont_fix_archived} wont_fix items")
+
+    stop_live_activity(metadata: { "events_deleted" => events_deleted, "wont_fix_archived" => wont_fix_archived })
   end
 end

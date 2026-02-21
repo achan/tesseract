@@ -9,6 +9,8 @@ export default class extends Controller {
       return Sortable.create(column, {
         group: "kanban",
         animation: 150,
+        delay: 100,
+        delayOnTouchOnly: true,
         draggable: "[data-id]",
         ghostClass: "opacity-30",
         onEnd: this.onEnd.bind(this)

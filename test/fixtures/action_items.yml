@@ -1,10 +1,10 @@
-open_item:
+untriaged_item:
   summary: recent_summary
   source: general (SlackChannel)
   description: "Review the PR"
   assignee_user_id: U_USER1
   source_ts: "1700000001.000001"
-  status: open
+  status: untriaged
 
 done_item:
   summary: recent_summary
@@ -12,11 +12,11 @@ done_item:
   description: "Update docs"
   status: done
 
-old_open_item:
+old_untriaged_item:
   summary: old_summary
   source: general (SlackChannel)
   description: "Old open task"
-  status: open
+  status: untriaged
   created_at: <%= 5.days.ago.iso8601 %>
 
 old_done_item:
@@ -26,9 +26,17 @@ old_done_item:
   status: done
   created_at: <%= 5.days.ago.iso8601 %>
 
-archived_open_item:
+predecessor_item:
   summary: archived_summary
   source: archived_general (SlackChannel)
-  description: "Archived open task"
-  status: open
+  description: "Item from predecessor channel"
+  status: untriaged
   created_at: <%= 10.days.ago.iso8601 %>
+
+archived_item:
+  summary: recent_summary
+  source: general (SlackChannel)
+  description: "Archived task"
+  status: todo
+  archived_at: <%= 1.day.ago.iso8601 %>
+  created_at: <%= 3.days.ago.iso8601 %>

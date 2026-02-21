@@ -14,7 +14,10 @@ Rails.application.routes.draw do
   resource :settings, only: :show
   post "logout", to: "settings#logout"
 
-  resources :action_items, only: [:index, :update]
+  resources :action_items, only: [:index, :new, :create, :edit, :update] do
+    patch :archive, on: :member
+    patch :unarchive, on: :member
+  end
   resources :overviews, only: :create
   resources :live_activities, only: :destroy
   resources :slack_replies, only: :create

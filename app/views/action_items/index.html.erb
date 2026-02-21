@@ -2,8 +2,6 @@
 
 <%= turbo_stream_from "kanban_action_items" %>
 
-<h1 class="text-2xl font-bold mb-6">Action Items</h1>
-
 <%
   column_labels = {
     "untriaged" => "Untriaged",
@@ -15,18 +13,40 @@
   }
 %>
 
-<div data-controller="kanban" class="flex gap-4 overflow-x-auto pb-4" style="min-height: 70vh;">
-  <% @columns.each do |status, items| %>
-    <div class="flex flex-col w-[300px] shrink-0 bg-secondary/30 rounded-lg">
-      <div class="flex items-center justify-between px-3 py-2 border-b border-border">
-        <h2 class="text-sm font-semibold"><%= column_labels[status] %></h2>
-        <span class="text-xs text-muted bg-secondary px-1.5 py-0.5 rounded-full"><%= items.size %></span>
+<div data-controller="action-item-modal kanban" data-action="keydown@document->action-item-modal#closeOnKey">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Action Items</h1>
+    <% if @archived %>
+      <%= link_to "Active Items", action_items_path, class: "text-sm text-primary hover:underline" %>
+    <% else %>
+      <%= link_to "Archived", action_items_path(archived: true), class: "text-sm text-muted hover:text-foreground" %>
+    <% end %>
+  </div>
+
+  <div class="flex gap-4 overflow-x-auto pb-4" style="min-height: 70vh;">
+    <% @columns.each do |status, items| %>
+      <div class="flex flex-col w-[300px] shrink-0 bg-secondary/30 rounded-lg">
+        <div class="flex items-center justify-between px-3 py-2 border-b border-border">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-semibold"><%= column_labels[status] %></h2>
+            <span class="text-xs text-muted bg-secondary px-1.5 py-0.5 rounded-full"><%= items.size %></span>
+          </div>
+          <% unless @archived %>
+            <button type="button"
+                    data-action="click->action-item-modal#openNew"
+                    data-status="<%= status %>"
+                    class="text-muted hover:text-foreground text-lg leading-none px-1"
+                    title="Add item">+</button>
+          <% end %>
+        </div>
+        <div id="kanban_column_<%= status %>" data-kanban-target="column" data-status="<%= status %>" class="flex flex-col gap-2 p-2 flex-1 overflow-y-auto min-h-[100px]">
+          <% items.each do |action_item| %>
+            <%= render "action_items/action_item", action_item: action_item, archived: @archived %>
+          <% end %>
+        </div>
       </div>
-      <div id="kanban_column_<%= status %>" data-kanban-target="column" data-status="<%= status %>" class="flex flex-col gap-2 p-2 flex-1 overflow-y-auto min-h-[100px]">
-        <% items.each do |action_item| %>
-          <%= render "action_items/action_item", action_item: action_item %>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
+
+  <%= render "action_items/modal" %>
 </div>
