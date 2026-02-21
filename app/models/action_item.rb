@@ -4,7 +4,7 @@ class ActionItem < ApplicationRecord
   DASHBOARD_STATUSES = %w[untriaged todo].freeze
 
   belongs_to :summary, optional: true
-  belongs_to :source, polymorphic: true
+  belongs_to :source, polymorphic: true, optional: true
 
   validates :description, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES }
@@ -16,13 +16,27 @@ class ActionItem < ApplicationRecord
   }.freeze
 
   scope :untriaged, -> { where(status: "untriaged") }
+  scope :active, -> { where(archived_at: nil) }
+  scope :archived, -> { where.not(archived_at: nil) }
 
   def status_label
     STATUS_LABELS[status] || status.titleize
   end
 
-  after_create_commit :broadcast_append, :broadcast_dashboard_append
-  after_update_commit :broadcast_replace, :broadcast_dashboard_update, :broadcast_kanban_move
+  def archive!
+    update!(archived_at: Time.current)
+  end
+
+  def unarchive!
+    update!(archived_at: nil)
+  end
+
+  def archived?
+    archived_at.present?
+  end
+
+  after_create_commit :broadcast_append, :broadcast_dashboard_append, :broadcast_kanban_append
+  after_update_commit :broadcast_replace, :broadcast_dashboard_update, :broadcast_kanban_move, :broadcast_kanban_archive
 
   private
 
@@ -74,10 +88,19 @@ class ActionItem < ApplicationRecord
     end
   end
 
-  def broadcast_kanban_move
-    return unless source.is_a?(SlackChannel) && saved_change_to_status?
+  def broadcast_kanban_append
+    broadcast_append_to(
+      "kanban_action_items",
+      target: "kanban_column_#{status}",
+      partial: "action_items/action_item",
+      locals: { action_item: self }
+    )
+  end
 
-    old_status = status_before_last_save
+  def broadcast_kanban_move
+    return if archived?
+    return unless saved_change_to_status?
+
     broadcast_remove_to("kanban_action_items", target: "action_item_#{id}")
     broadcast_append_to(
       "kanban_action_items",
@@ -85,6 +108,21 @@ class ActionItem < ApplicationRecord
       partial: "action_items/action_item",
       locals: { action_item: self }
     )
+  end
+
+  def broadcast_kanban_archive
+    return unless saved_change_to_archived_at?
+
+    if archived?
+      broadcast_remove_to("kanban_action_items", target: "action_item_#{id}")
+    else
+      broadcast_append_to(
+        "kanban_action_items",
+        target: "kanban_column_#{status}",
+        partial: "action_items/action_item",
+        locals: { action_item: self }
+      )
+    end
   end
 
   def dom_id(record)

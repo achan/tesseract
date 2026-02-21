@@ -1,0 +1,54 @@
+<div class="flex items-center justify-between mb-4">
+  <h2 class="text-lg font-semibold text-foreground">
+    <%= action_item.persisted? ? "Edit Action Item" : "New Action Item" %>
+  </h2>
+  <button type="button" data-action="action-item-modal#close"
+          class="text-muted hover:text-foreground text-xl leading-none">&times;</button>
+</div>
+
+<%= form_with(model: action_item, data: { turbo: true, action: "turbo:submit-end->action-item-modal#submitEnd" }) do |f| %>
+  <% if action_item.errors.any? %>
+    <div class="bg-red-50 dark:bg-red-900/30 border border-destructive rounded-md px-4 py-3 mb-4 text-destructive text-sm">
+      <ul class="list-disc pl-5">
+        <% action_item.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <%= f.label :description, "Description", class: "block text-sm font-semibold mb-1" %>
+    <%= f.text_area :description, rows: 3, required: true,
+        class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary resize-y" %>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <%= f.label :priority, "Priority", class: "block text-sm font-semibold mb-1" %>
+      <%= f.select :priority, (1..5).map { |n| ["P#{n}", n] },
+          {}, class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" %>
+    </div>
+
+    <div>
+      <%= f.label :status, "Status", class: "block text-sm font-semibold mb-1" %>
+      <%= f.select :status, ActionItem::KANBAN_COLUMNS.map { |s| [ActionItem::STATUS_LABELS[s] || s.titleize, s] },
+          {}, class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <%= f.label :assignee_user_id, "Assignee", class: "block text-sm font-semibold mb-1" %>
+    <%= f.text_field :assignee_user_id, placeholder: "Optional",
+        class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary" %>
+  </div>
+
+  <div class="flex justify-end gap-2 mt-4">
+    <button type="button" data-action="action-item-modal#close"
+            class="px-3 py-1.5 text-sm text-muted hover:text-foreground rounded-md border border-border">
+      Cancel
+    </button>
+    <%= f.submit action_item.persisted? ? "Save" : "Create",
+        class: "px-3 py-1.5 text-sm bg-primary text-primary-foreground rounded-md hover:opacity-90 cursor-pointer" %>
+  </div>
+<% end %>

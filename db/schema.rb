@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_21_025400) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_21_055817) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type"
@@ -22,6 +22,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_21_025400) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "priority", default: 3, null: false
+    t.datetime "archived_at"
+    t.index ["archived_at"], name: "index_action_items_on_archived_at"
     t.index ["source_type", "source_id"], name: "index_action_items_on_source_type_and_source_id"
     t.index ["status"], name: "index_action_items_on_status"
     t.index ["summary_id"], name: "index_action_items_on_summary_id"
