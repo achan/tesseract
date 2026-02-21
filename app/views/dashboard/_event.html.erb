@@ -75,7 +75,7 @@
       <% body = render_event_body(event) %>
       <% if body.present? %>
         <div data-controller="expandable">
-          <div class="text-sm prose prose-sm prose-invert max-w-none mt-1 max-h-24 overflow-hidden"
+          <div class="text-sm prose prose-sm max-w-none mt-1 max-h-24 overflow-hidden"
                data-expandable-target="content">
             <%= body %>
           </div>

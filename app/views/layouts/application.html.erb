@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html style="color-scheme: light dark">
   <head>
     <title><%= content_for(:title) || "Tesseract" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -22,7 +22,7 @@
 
     <main class="p-8 overflow-y-auto">
       <% if notice.present? %>
-        <div class="bg-green-50 border border-success rounded-md px-4 py-3 mb-6 text-green-800 text-sm"><%= notice %></div>
+        <div class="bg-green-50 dark:bg-green-900/30 border border-success rounded-md px-4 py-3 mb-6 text-green-800 dark:text-green-200 text-sm"><%= notice %></div>
       <% end %>
       <%= yield %>
     </main>

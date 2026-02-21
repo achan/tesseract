@@ -16,7 +16,7 @@
   </div>
   <% body = render_event_body(event) %>
   <% if body.present? %>
-    <div class="text-sm prose prose-sm prose-invert max-w-none"><%= body %></div>
+    <div class="text-sm prose prose-sm max-w-none"><%= body %></div>
   <% end %>
   <% if event.thread_ts.present? %>
     <span class="inline-block text-xs text-primary mt-1">Thread</span>

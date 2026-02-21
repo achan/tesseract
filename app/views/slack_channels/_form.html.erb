@@ -1,6 +1,6 @@
 <%= form_with(model: channel, url: workspace_slack_channel_path(workspace, channel)) do |f| %>
   <% if channel.errors.any? %>
-    <div class="bg-red-50 border border-destructive rounded-md px-4 py-3 mb-4 text-destructive text-sm">
+    <div class="bg-red-50 dark:bg-red-900/30 border border-destructive rounded-md px-4 py-3 mb-4 text-destructive text-sm">
       <ul class="list-disc pl-5">
         <% channel.errors.full_messages.each do |msg| %>
           <li><%= msg %></li>

@@ -2,10 +2,10 @@
 
 <h1 class="text-2xl font-bold mb-6">Settings</h1>
 
-<div class="bg-white border border-border rounded-lg p-6 mb-6">
+<div class="bg-card border border-border rounded-lg p-6 mb-6">
   <h2 class="text-lg font-semibold mb-4">System Health</h2>
 
-  <div class="divide-y divide-gray-100">
+  <div class="divide-y divide-border">
     <%# Deploy endpoint %>
     <div class="flex items-center justify-between py-2">
       <span class="text-sm">Deploy Endpoint</span>
@@ -85,7 +85,7 @@
   </div>
 </div>
 
-<div class="bg-white border border-border rounded-lg p-6 mb-6">
+<div class="bg-card border border-border rounded-lg p-6 mb-6">
   <h2 class="text-lg font-semibold mb-4">Actions</h2>
   <div class="flex items-center justify-between py-2">
     <div>
@@ -98,7 +98,7 @@
   </div>
 </div>
 
-<div class="bg-white border border-border rounded-lg p-6">
+<div class="bg-card border border-border rounded-lg p-6">
   <h2 class="text-lg font-semibold mb-4">Channels</h2>
   <p class="text-sm text-muted mb-6">
     Click the star to show or hide a channel from the dashboard feed.
@@ -110,8 +110,8 @@
     <% next if channels.empty? %>
 
     <div class="mb-6">
-      <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2"><%= workspace.team_name %></h3>
-      <ul class="divide-y divide-gray-100">
+      <h3 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2"><%= workspace.team_name %></h3>
+      <ul class="divide-y divide-border">
         <% channels.each do |channel| %>
           <li class="flex items-center justify-between py-2">
             <%= link_to channel.display_name, workspace_slack_channel_path(workspace, channel),
@@ -128,10 +128,10 @@
 </div>
 
 <% if http_basic_auth_configured? %>
-  <div class="bg-white border border-border rounded-lg p-6 mt-6">
+  <div class="bg-card border border-border rounded-lg p-6 mt-6">
     <h2 class="text-lg font-semibold mb-4">Session</h2>
     <%= button_to "Log out", logout_path,
           method: :post,
-          class: "text-sm text-red-600 hover:text-red-800 cursor-pointer bg-transparent border-0 p-0 underline" %>
+          class: "text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 cursor-pointer bg-transparent border-0 p-0 underline" %>
   </div>
 <% end %>

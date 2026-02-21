@@ -102,3 +102,30 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #0a0a0a;
+    --color-foreground: #fafafa;
+    --color-muted: #a3a3a3;
+    --color-muted-foreground: #a3a3a3;
+    --color-border: #262626;
+    --color-card: #171717;
+    --color-card-foreground: #fafafa;
+    --color-primary: #fafafa;
+    --color-primary-foreground: #171717;
+    --color-secondary: #262626;
+    --color-secondary-foreground: #fafafa;
+    --color-destructive: #ef4444;
+    --color-destructive-foreground: #fafafa;
+    --color-success: #22c55e;
+    --color-success-foreground: #fafafa;
+    --color-accent: #262626;
+    --color-accent-foreground: #fafafa;
+    --color-sidebar: #09090b;
+    --color-sidebar-foreground: #a1a1aa;
+    --color-sidebar-accent: rgba(255, 255, 255, 0.1);
+    --color-sidebar-muted: #71717a;
+    --color-ring: #525252;
+  }
+}
