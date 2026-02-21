@@ -38,7 +38,7 @@ class GenerateActionItemsJob < ApplicationJob
         assignee_user_id: item["assignee"],
         source_ts: item["source_ts"],
         priority: item["priority"] || 3,
-        status: "open"
+        status: "untriaged"
       )
     end
 

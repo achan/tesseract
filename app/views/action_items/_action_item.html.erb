@@ -12,12 +12,18 @@
   when 3 then "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
   else "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
   end
+
+  faded = action_item.status.in?(%w[done wontfix])
+
+  btn_primary = "inline-flex items-center px-2 py-1 text-xs font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 cursor-pointer"
+  btn_success = "inline-flex items-center px-2 py-1 text-xs font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 cursor-pointer"
+  btn_secondary = "inline-flex items-center px-2 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer"
 %>
-<div id="action_item_<%= action_item.id %>" class="flex flex-col w-[320px] shrink-0 p-3 border border-border rounded-md <%= priority_classes %> <%= action_item.status == 'done' ? 'opacity-50' : '' %> <%= action_item.status == 'dismissed' ? 'opacity-40' : '' %>">
+<div id="action_item_<%= action_item.id %>" class="flex flex-col p-3 border border-border rounded-md bg-background <%= priority_classes %> <%= 'opacity-50' if faded %>">
   <div class="flex items-start justify-between gap-2 mb-1">
     <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= priority_label_classes %>">P<%= action_item.priority %></span>
-    <% if action_item.status != "open" %>
-      <span class="text-xs text-muted capitalize"><%= action_item.status %></span>
+    <% if action_item.source.is_a?(SlackChannel) %>
+      <span class="text-xs text-muted truncate">#<%= action_item.source.display_name %></span>
     <% end %>
   </div>
   <p class="text-sm mb-1 line-clamp-3"><%= action_item.description %></p>
@@ -28,24 +34,38 @@
       <% end %>
       <time datetime="<%= action_item.created_at.iso8601 %>" data-controller="local-time-display"><%= action_item.created_at.strftime("%b %-d, %l:%M %p") %></time>
     </div>
-    <% if action_item.status == "open" %>
-      <div class="flex gap-2">
+    <div class="flex flex-wrap gap-1">
+      <% case action_item.status %>
+      <% when "untriaged" %>
+        <%= button_to "Open", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "open" } }, class: btn_primary, data: { turbo: true } %>
+        <%= button_to "Backlog", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "backlog" } }, class: btn_secondary, data: { turbo: true } %>
+        <%= button_to "Won't Fix", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "wontfix" } }, class: btn_secondary, data: { turbo: true } %>
+      <% when "open" %>
+        <%= button_to "Start", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "in_progress" } }, class: btn_primary, data: { turbo: true } %>
         <%= button_to "Done", action_item_path(action_item), method: :patch,
-              params: { action_item: { status: "done" } },
-              class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-success-foreground bg-success rounded-md hover:bg-success/90 cursor-pointer",
-              data: { turbo: true } %>
-        <%= button_to "Acknowledge", action_item_path(action_item), method: :patch,
-              params: { action_item: { status: "dismissed" } },
-              class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer",
-              data: { turbo: true } %>
-      </div>
-    <% else %>
-      <div class="flex gap-2">
+              params: { action_item: { status: "done" } }, class: btn_success, data: { turbo: true } %>
+        <%= button_to "Backlog", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "backlog" } }, class: btn_secondary, data: { turbo: true } %>
+        <%= button_to "Won't Fix", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "wontfix" } }, class: btn_secondary, data: { turbo: true } %>
+      <% when "backlog" %>
+        <%= button_to "Open", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "open" } }, class: btn_primary, data: { turbo: true } %>
+        <%= button_to "Won't Fix", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "wontfix" } }, class: btn_secondary, data: { turbo: true } %>
+      <% when "in_progress" %>
+        <%= button_to "Done", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "done" } }, class: btn_success, data: { turbo: true } %>
         <%= button_to "Reopen", action_item_path(action_item), method: :patch,
-              params: { action_item: { status: "open" } },
-              class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer",
-              data: { turbo: true } %>
-      </div>
-    <% end %>
+              params: { action_item: { status: "open" } }, class: btn_secondary, data: { turbo: true } %>
+      <% when "done", "wontfix" %>
+        <%= button_to "Reopen", action_item_path(action_item), method: :patch,
+              params: { action_item: { status: "open" } }, class: btn_secondary, data: { turbo: true } %>
+      <% end %>
+    </div>
   </div>
 </div>

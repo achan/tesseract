@@ -3,7 +3,7 @@ class DashboardController < ApplicationController
     @live_activities = LiveActivity.visible
 
     @action_items = ActionItem
-      .open_items
+      .untriaged_items
       .where(source_type: "SlackChannel")
       .order(priority: :asc, created_at: :asc)
 

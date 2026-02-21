@@ -1,13 +1,33 @@
 <% content_for(:title, "Action Items") %>
 
+<%
+  column_labels = {
+    "untriaged" => "Untriaged",
+    "open" => "Open",
+    "backlog" => "Backlog",
+    "in_progress" => "In Progress",
+    "done" => "Done",
+    "wontfix" => "Won't Fix"
+  }
+%>
+
 <h1 class="text-2xl font-bold mb-6">Action Items</h1>
 
-<div class="flex items-stretch gap-3 flex-wrap">
-  <% @action_items.each do |action_item| %>
-    <%= render "action_items/action_item", action_item: action_item %>
+<div class="flex gap-4 overflow-x-auto pb-4" style="min-height: 70vh;">
+  <% @columns.each do |status, items| %>
+    <div class="flex flex-col w-[340px] shrink-0">
+      <div class="flex items-center gap-2 mb-3 px-1">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-muted"><%= column_labels[status] || status.titleize %></h2>
+        <span class="text-xs text-muted bg-secondary rounded-full px-2 py-0.5"><%= items.size %></span>
+      </div>
+      <div id="kanban_column_<%= status %>" class="flex flex-col gap-2 flex-1 p-2 bg-secondary/30 rounded-lg overflow-y-auto">
+        <% items.each do |action_item| %>
+          <%= render "action_items/action_item", action_item: action_item %>
+        <% end %>
+        <% if items.empty? %>
+          <p class="text-xs text-muted text-center py-8">No items</p>
+        <% end %>
+      </div>
+    </div>
   <% end %>
 </div>
-
-<% if @action_items.empty? %>
-  <p class="text-sm text-muted">No action items.</p>
-<% end %>

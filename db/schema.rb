@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_20_220000) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_21_010000) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type"
@@ -18,7 +18,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_20_220000) do
     t.text "description", null: false
     t.text "assignee_user_id"
     t.text "source_ts"
-    t.text "status", default: "open", null: false
+    t.text "status", default: "untriaged", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "priority", default: 3, null: false

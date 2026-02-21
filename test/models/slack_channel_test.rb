@@ -164,7 +164,7 @@ class SlackChannelTest < ActiveSupport::TestCase
     general = slack_channels(:general)
 
     items = general.all_action_items
-    assert_includes items, action_items(:open_item)
-    assert_includes items, action_items(:archived_open_item)
+    assert_includes items, action_items(:untriaged_item)
+    assert_includes items, action_items(:archived_untriaged_item)
   end
 end

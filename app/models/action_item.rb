@@ -1,15 +1,18 @@
 class ActionItem < ApplicationRecord
+  STATUSES = %w[untriaged open backlog in_progress done wontfix].freeze
+
   belongs_to :summary, optional: true
   belongs_to :source, polymorphic: true
 
   validates :description, presence: true
-  validates :status, presence: true, inclusion: { in: %w[open done dismissed] }
+  validates :status, presence: true, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: 1..5 }
 
-  scope :open_items, -> { where(status: "open") }
+  scope :untriaged_items, -> { where(status: "untriaged") }
+  scope :active_items, -> { where(status: %w[untriaged open backlog in_progress]) }
 
   after_create_commit :broadcast_append, :broadcast_dashboard_append
-  after_update_commit :broadcast_replace, :broadcast_dashboard_remove
+  after_update_commit :broadcast_replace, :broadcast_dashboard_update
 
   private
 
@@ -36,7 +39,7 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_dashboard_append
-    return unless source.is_a?(SlackChannel) && status == "open"
+    return unless source.is_a?(SlackChannel) && status == "untriaged"
 
     broadcast_append_to(
       "dashboard_action_items",
@@ -46,10 +49,19 @@ class ActionItem < ApplicationRecord
     )
   end
 
-  def broadcast_dashboard_remove
-    return unless source.is_a?(SlackChannel) && status != "open"
+  def broadcast_dashboard_update
+    return unless source.is_a?(SlackChannel)
 
-    broadcast_remove_to("dashboard_action_items", target: "dashboard_action_item_#{id}")
+    if status == "untriaged"
+      broadcast_replace_to(
+        "dashboard_action_items",
+        target: "dashboard_action_item_#{id}",
+        partial: "dashboard/action_item",
+        locals: { action_item: self }
+      )
+    else
+      broadcast_remove_to("dashboard_action_items", target: "dashboard_action_item_#{id}")
+    end
   end
 
   def dom_id(record)

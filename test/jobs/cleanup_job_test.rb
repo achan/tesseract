@@ -10,7 +10,7 @@ class CleanupJobTest < ActiveSupport::TestCase
 
   test "does not delete summaries or action items" do
     old_summary = summaries(:old_summary)
-    old_open = action_items(:old_open_item)
+    old_open = action_items(:old_untriaged_item)
     old_done = action_items(:old_done_item)
 
     CleanupJob.perform_now
