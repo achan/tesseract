@@ -1,6 +1,6 @@
 class ActionItem < ApplicationRecord
-  STATUSES = %w[untriaged todo in_progress done backlog wont_fix].freeze
-  KANBAN_COLUMNS = %w[untriaged todo in_progress done backlog wont_fix].freeze
+  STATUSES = %w[untriaged backlog todo in_progress done wont_fix].freeze
+  KANBAN_COLUMNS = %w[untriaged backlog todo in_progress done wont_fix].freeze
   DASHBOARD_STATUSES = %w[untriaged todo].freeze
 
   belongs_to :summary, optional: true
