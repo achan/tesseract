@@ -7,6 +7,15 @@ class GenerateActionItemsJob < ApplicationJob
 
     channel = event.slack_channel
 
+    latest_event_id = channel.slack_events.order(created_at: :desc).pick(:id)
+    return unless latest_event_id == event.id
+
+    events = channel.slack_events
+      .where("created_at > ?", 2.hours.ago)
+      .order(:created_at)
+
+    return if events.empty?
+
     start_live_activity(
       activity_type: "action_items",
       activity_id: slack_event_id.to_s,
@@ -14,25 +23,10 @@ class GenerateActionItemsJob < ApplicationJob
       subtitle: "##{channel.channel_name}"
     )
 
-    latest_event_id = channel.slack_events.order(created_at: :desc).pick(:id)
-    unless latest_event_id == event.id
-      stop_live_activity(subtitle: "Skipped — newer event pending")
-      return
-    end
-
-    events = channel.slack_events
-      .where("created_at > ?", 2.hours.ago)
-      .order(:created_at)
-
-    if events.empty?
-      stop_live_activity(subtitle: "No recent messages")
-      return
-    end
-
     grouped = group_by_thread(events)
     prompt = build_prompt(grouped, channel)
 
-    update_live_activity(subtitle: "Calling Claude...")
+    update_live_activity(subtitle: "##{channel.channel_name} — Calling Claude...")
 
     result_text = call_claude(prompt)
     parsed = extract_json(result_text)
@@ -48,9 +42,9 @@ class GenerateActionItemsJob < ApplicationJob
       )
     end
 
-    stop_live_activity(metadata: { "items" => items.size })
+    stop_live_activity(subtitle: "##{channel.channel_name}", metadata: { "items" => items.size })
   rescue => e
-    stop_live_activity(subtitle: "Failed")
+    stop_live_activity(subtitle: "##{channel.channel_name} — Failed")
     raise
   end
 
