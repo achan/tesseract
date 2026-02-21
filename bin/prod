@@ -8,6 +8,7 @@ main() {
   export RAILS_ENV=production
   export SOLID_QUEUE_IN_PUMA=1
   export PORT="${PORT:-6001}"
+  export PIDFILE="tmp/pids/server.pid"
 
   # Read tunnel ID from .worktreerc
   CLOUDFLARE_TUNNEL_ID=$(grep "^CLOUDFLARE_TUNNEL_ID=" .worktreerc | cut -d'=' -f2)
