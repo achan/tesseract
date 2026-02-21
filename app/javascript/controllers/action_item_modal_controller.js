@@ -12,11 +12,8 @@ export default class extends Controller {
   }
 
   openEdit(event) {
-    // Don't open edit if we just finished a drag
-    if (event.defaultPrevented) return
-
-    // Don't open edit if clicking a button/link/form inside the card
-    if (event.target.closest("button, a, form")) return
+    event.preventDefault()
+    event.stopPropagation()
 
     const url = event.currentTarget.dataset.editUrl
     if (!url) return

@@ -14,34 +14,30 @@
   when 3 then "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
   else "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
   end
-
-  status_classes = case action_item.status
-  when "done" then "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-  when "wont_fix" then "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-  when "in_progress" then "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-  when "todo" then "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-  when "backlog" then "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-  else "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-  end
 %>
 <div id="action_item_<%= action_item.id %>"
      class="group relative flex flex-col p-3 border border-border rounded-md bg-card <%= priority_classes %> cursor-grab active:cursor-grabbing"
      data-id="<%= action_item.id %>"
-     data-status="<%= action_item.status %>"
-     data-action="click->action-item-modal#openEdit"
-     data-edit-url="<%= edit_action_item_path(action_item) %>">
+     data-status="<%= action_item.status %>">
   <div class="flex items-start justify-between gap-2 mb-1">
     <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= priority_label_classes %>">P<%= action_item.priority %></span>
-    <div class="flex items-center gap-1">
-      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= status_classes %>"><%= action_item.status_label %></span>
+    <div class="flex items-center gap-3">
       <% if archived %>
         <%= button_to "Restore", unarchive_action_item_path(action_item), method: :patch,
-            data: { turbo: true, action: "click->action-item-modal#stopPropagation" },
+            data: { turbo: true },
             class: "inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded bg-primary text-primary-foreground hover:opacity-90 cursor-pointer" %>
       <% else %>
+        <button type="button"
+                class="inline-flex items-center p-0.5 text-xs text-muted hover:text-foreground rounded cursor-pointer"
+                data-action="click->action-item-modal#openEdit"
+                data-edit-url="<%= edit_action_item_path(action_item) %>">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
+        </button>
         <%= button_to archive_action_item_path(action_item), method: :patch,
-            data: { turbo: true, action: "click->action-item-modal#stopPropagation" },
-            class: "opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center px-1.5 py-0.5 text-xs text-muted hover:text-foreground rounded cursor-pointer" do %>
+            data: { turbo: true },
+            class: "inline-flex items-center p-0.5 text-xs text-muted hover:text-foreground rounded cursor-pointer" do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
             <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
             <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd" />
