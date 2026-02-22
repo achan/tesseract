@@ -14,7 +14,7 @@
       <%= link_to root_path, class: "no-underline flex items-center gap-2" do %>
         <%= image_tag "logo.png", alt: "Tesseract", class: "h-8" %>
         <% if Rails.env.development? %>
-          <span class="text-[0.6rem] font-semibold tracking-wider uppercase text-muted">DEV</span>
+          <span class="text-[0.6rem] font-semibold tracking-wider uppercase text-muted">DEV:<%= request.server_port %></span>
         <% end %>
       <% end %>
       <%= link_to settings_path, class: "text-muted no-underline hover:text-foreground", title: "Settings" do %>
