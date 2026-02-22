@@ -1,11 +1,14 @@
 class GenerateOverviewJob < ApplicationJob
   queue_as :default
 
-  def perform
+  def perform(profile_id: nil)
+    @profile = Profile.find_by(id: profile_id) if profile_id
+
+    activity_title = @profile ? "Generating overview for #{@profile.name}" : "Generating overview"
     start_live_activity(
       activity_type: "overview",
-      activity_id: "overview",
-      title: "Generating overview",
+      activity_id: "overview-#{profile_id || 'system'}",
+      title: activity_title,
       subtitle: "Collecting messages..."
     )
 
@@ -15,6 +18,11 @@ class GenerateOverviewJob < ApplicationJob
       .where("slack_events.created_at > ?", 1.hour.ago)
       .includes(:slack_channel)
       .order(:created_at)
+
+    if @profile
+      channel_ids = SlackChannel.where(workspace_id: @profile.workspace_ids).pluck(:id)
+      events = events.where(slack_channel_id: channel_ids)
+    end
 
     if events.empty?
       stop_live_activity(subtitle: "No recent messages")
@@ -34,7 +42,8 @@ class GenerateOverviewJob < ApplicationJob
     Overview.create!(
       summary: parsed["summary"].presence,
       body: parsed["details"] || result_text,
-      model_used: "claude-cli"
+      model_used: "claude-cli",
+      profile: @profile
     )
 
     stop_live_activity
@@ -54,7 +63,7 @@ class GenerateOverviewJob < ApplicationJob
   end
 
   def resolve_user_names(events)
-    workspace = Workspace.first
+    workspace = @profile ? @profile.workspaces.first : Workspace.first
     return {} unless workspace
 
     user_ids = events.map(&:user_id).compact.uniq

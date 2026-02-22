@@ -4,6 +4,10 @@ Rails.application.routes.draw do
   root "dashboard#index"
   get "dashboard/events", to: "dashboard#events", as: :dashboard_events
 
+  resources :profiles do
+    patch :toggle, on: :member
+  end
+
   resources :workspaces, except: :show do
     resources :slack_channels, except: [:index, :new, :create] do
       patch :toggle_hidden, on: :member

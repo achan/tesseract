@@ -1,0 +1,28 @@
+<% content_for(:title, @profile.name) %>
+
+<div class="max-w-md px-8">
+  <h2 class="text-xl font-semibold mb-6"><%= @profile.name %></h2>
+
+  <div class="flex gap-3 mb-6">
+    <%= link_to "Edit", edit_profile_path(@profile),
+          class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent" %>
+    <%= button_to "Delete", profile_path(@profile), method: :delete,
+          class: "inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 border border-border rounded-md hover:bg-accent cursor-pointer",
+          form: { data: { turbo_confirm: "Delete this profile?" } } %>
+  </div>
+
+  <h3 class="text-sm font-semibold text-muted uppercase tracking-wide mb-2">Workspaces</h3>
+  <% workspaces = @profile.workspaces.order(:team_name) %>
+  <% if workspaces.any? %>
+    <ul class="divide-y divide-border">
+      <% workspaces.each do |workspace| %>
+        <li class="py-2">
+          <%= link_to workspace.team_name, edit_workspace_path(workspace),
+                class: "text-sm hover:underline" %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-muted">No workspaces assigned to this profile.</p>
+  <% end %>
+</div>

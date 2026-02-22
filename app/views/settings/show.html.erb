@@ -100,6 +100,25 @@
   </div>
 </div>
 
+<div class="bg-card border border-border rounded-lg p-6 mb-6">
+  <h2 class="text-lg font-semibold mb-4">Profiles</h2>
+  <p class="text-sm text-muted mb-6">
+    Toggle profiles to show or hide their workspaces from the dashboard and feeds.
+  </p>
+
+  <% Profile.order(:name).each do |profile| %>
+    <div class="flex items-center justify-between py-2">
+      <%= link_to profile.name, profile_path(profile), class: "text-sm hover:underline" %>
+      <%= render "profiles/toggle", profile: profile %>
+    </div>
+  <% end %>
+
+  <div class="mt-4">
+    <%= link_to "New Profile", new_profile_path,
+          class: "text-sm text-primary hover:underline" %>
+  </div>
+</div>
+
 <div class="bg-card border border-border rounded-lg p-6">
   <h2 class="text-lg font-semibold mb-4">Channels</h2>
   <p class="text-sm text-muted mb-6">

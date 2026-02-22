@@ -10,11 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_21_055817) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_22_192803) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
-    t.text "source_type"
-    t.integer "source_id"
+    t.text "source_type", null: false
+    t.integer "source_id", null: false
     t.text "description", null: false
     t.text "assignee_user_id"
     t.text "source_ts"
@@ -48,6 +48,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_21_055817) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "summary"
+    t.integer "profile_id"
+    t.index ["profile_id"], name: "index_overviews_on_profile_id"
+  end
+
+  create_table "profiles", force: :cascade do |t|
+    t.text "name", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "slack_channels", force: :cascade do |t|
@@ -103,9 +112,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_21_055817) do
     t.boolean "include_dms", default: false, null: false
     t.boolean "include_mpims", default: false, null: false
     t.text "team_id"
+    t.integer "profile_id", null: false
+    t.index ["profile_id"], name: "index_workspaces_on_profile_id"
   end
 
+  add_foreign_key "overviews", "profiles"
   add_foreign_key "slack_channels", "slack_channels", column: "predecessor_id"
   add_foreign_key "slack_channels", "workspaces"
   add_foreign_key "slack_events", "slack_channels"
+  add_foreign_key "workspaces", "profiles"
 end

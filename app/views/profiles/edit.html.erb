@@ -1,0 +1,6 @@
+<% content_for(:title, "Edit Profile — #{@profile.name}") %>
+
+<div class="max-w-md px-8">
+  <h2 class="text-xl font-semibold mb-6">Edit Profile</h2>
+  <%= render "form", profile: @profile %>
+</div>

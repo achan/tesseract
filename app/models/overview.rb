@@ -1,4 +1,6 @@
 class Overview < ApplicationRecord
+  belongs_to :profile, optional: true
+
   after_create_commit :broadcast_replace
 
   private

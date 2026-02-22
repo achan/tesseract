@@ -4,6 +4,10 @@ class ActionItemsController < ApplicationController
     @archived = params[:archived] == "true"
 
     @action_items = scope
+      .where(
+        "(source_type = 'SlackChannel' AND source_id IN (?)) OR (source_type = 'Profile' AND source_id IN (?))",
+        active_slack_channel_ids, active_profile_ids
+      )
       .order(priority: :asc, created_at: :desc)
 
     @columns = ActionItem::KANBAN_COLUMNS.map do |status|
@@ -12,7 +16,7 @@ class ActionItemsController < ApplicationController
   end
 
   def new
-    @action_item = ActionItem.new(status: params[:status] || "untriaged", priority: 3)
+    @action_item = ActionItem.new(source_type: "Profile", status: params[:status] || "untriaged", priority: 3)
 
     respond_to do |format|
       format.turbo_stream do
@@ -118,6 +122,6 @@ class ActionItemsController < ApplicationController
   private
 
   def action_item_params
-    params.require(:action_item).permit(:description, :priority, :assignee_user_id, :status)
+    params.require(:action_item).permit(:description, :priority, :assignee_user_id, :status, :source_id, :source_type)
   end
 end

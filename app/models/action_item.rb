@@ -4,7 +4,7 @@ class ActionItem < ApplicationRecord
   DASHBOARD_STATUSES = %w[untriaged todo].freeze
 
   belongs_to :summary, optional: true
-  belongs_to :source, polymorphic: true, optional: true
+  belongs_to :source, polymorphic: true
 
   validates :description, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES }

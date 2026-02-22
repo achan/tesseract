@@ -7,13 +7,17 @@ class DashboardController < ApplicationController
     @action_items = ActionItem
       .active
       .where(status: ActionItem::DASHBOARD_STATUSES)
+      .where(
+        "(source_type = 'SlackChannel' AND source_id IN (?)) OR (source_type = 'Profile' AND source_id IN (?))",
+        active_slack_channel_ids, active_profile_ids
+      )
       .order(
         Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'todo' THEN 1 END"),
         priority: :asc,
         created_at: :asc
       )
 
-    @overview = Overview.order(created_at: :desc).first
+    @overview = pick_overview
 
     events_scope = events_scope()
     @events = events_scope.limit(EVENTS_PER_PAGE)
@@ -29,10 +33,20 @@ class DashboardController < ApplicationController
 
   private
 
+  def pick_overview
+    enabled_profiles = Profile.where(enabled: true)
+    scope = if enabled_profiles.count == 1
+      Overview.where(profile_id: enabled_profiles.first.id)
+    else
+      Overview.where(profile_id: nil)
+    end
+    scope.order(created_at: :desc).first
+  end
+
   def events_scope
     SlackEvent
       .messages
-      .joins(:slack_channel).where(slack_channels: { hidden: false })
+      .joins(:slack_channel).where(slack_channels: { hidden: false, workspace_id: active_workspace_ids })
       .includes(slack_channel: :workspace)
       .order(created_at: :desc)
   end
