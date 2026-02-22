@@ -5,7 +5,11 @@ class DashboardController < ApplicationController
     @action_items = ActionItem
       .where(status: ActionItem::DASHBOARD_STATUSES)
       .where(source_type: "SlackChannel")
-      .order(priority: :asc, created_at: :asc)
+      .order(
+        Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'todo' THEN 1 END"),
+        priority: :asc,
+        created_at: :asc
+      )
 
     @overview = Overview.order(created_at: :desc).first
 
