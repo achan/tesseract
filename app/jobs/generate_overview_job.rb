@@ -45,8 +45,9 @@ class GenerateOverviewJob < ApplicationJob
   def call_claude(prompt)
     output, status = Open3.capture2(
       { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
-      "claude", "-p", prompt,
-      "--output-format", "text"
+      "claude", "-p", "-",
+      "--output-format", "text",
+      stdin_data: prompt
     )
     raise "claude CLI failed (exit #{status.exitstatus}): #{output}" unless status.success?
     output.strip
