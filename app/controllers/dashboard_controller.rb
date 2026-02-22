@@ -17,7 +17,7 @@ class DashboardController < ApplicationController
         created_at: :asc
       )
 
-    @overview = Overview.order(created_at: :desc).first
+    @overview = pick_overview
 
     events_scope = events_scope()
     @events = events_scope.limit(EVENTS_PER_PAGE)
@@ -32,6 +32,16 @@ class DashboardController < ApplicationController
   end
 
   private
+
+  def pick_overview
+    enabled_profiles = Profile.where(enabled: true)
+    scope = if enabled_profiles.count == 1
+      Overview.where(profile_id: enabled_profiles.first.id)
+    else
+      Overview.where(profile_id: nil)
+    end
+    scope.order(created_at: :desc).first
+  end
 
   def events_scope
     SlackEvent
