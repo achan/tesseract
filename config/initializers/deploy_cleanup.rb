@@ -1,4 +1,6 @@
 Rails.application.config.after_initialize do
+  next unless defined?(Rails::Server)
+
   commit_sha = Rails.cache.read("deploy:pending")
   next unless commit_sha
 
