@@ -74,8 +74,6 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_dashboard_update
-    return unless source.is_a?(SlackChannel)
-
     if status.in?(DASHBOARD_STATUSES) && !archived?
       broadcast_replace_to(
         "dashboard_action_items",

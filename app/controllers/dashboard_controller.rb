@@ -5,7 +5,6 @@ class DashboardController < ApplicationController
     @action_items = ActionItem
       .active
       .where(status: ActionItem::DASHBOARD_STATUSES)
-      .where(source_type: "SlackChannel")
       .order(
         Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'todo' THEN 1 END"),
         priority: :asc,
