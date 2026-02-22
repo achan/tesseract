@@ -6,7 +6,7 @@ module SettingsHelper
     when :red    then "bg-red-500"
     else              "bg-gray-400"
     end
-    tag.span(class: "inline-block w-2.5 h-2.5 rounded-full #{color}")
+    tag.span(class: "inline-block w-2.5 h-2.5 shrink-0 rounded-full #{color}")
   end
 
   def health_time_status(time, green_threshold: 1.hour, yellow_threshold: 24.hours)
