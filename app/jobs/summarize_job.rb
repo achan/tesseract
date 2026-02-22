@@ -45,7 +45,7 @@ class SummarizeJob < ApplicationJob
   def call_claude(prompt)
     output, status = Open3.capture2(
       { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
-      "claude", "-p", "-",
+      "claude", "-p",
       "--output-format", "text",
       stdin_data: prompt
     )
@@ -85,18 +85,32 @@ class SummarizeJob < ApplicationJob
     lines.join("\n")
   end
 
+  MAX_PROMPT_CHARS = 100_000
+
   def append_messages(lines, grouped)
-    grouped[:top_level].each do |event|
+    budget = MAX_PROMPT_CHARS - lines.sum(&:length)
+    message_lines = []
+
+    grouped[:top_level].reverse_each do |event|
+      entry_lines = []
       text = event.payload.is_a?(Hash) ? event.payload["text"] : ""
-      lines << "[#{event.ts}] #{event.user_id}: #{text}"
+      entry_lines << "[#{event.ts}] #{event.user_id}: #{text}"
 
       thread_replies = grouped[:threads][event.ts]
       if thread_replies
         thread_replies.each do |reply|
           reply_text = reply.payload.is_a?(Hash) ? reply.payload["text"] : ""
-          lines << "  [#{reply.ts}] #{reply.user_id}: #{reply_text}"
+          entry_lines << "  [#{reply.ts}] #{reply.user_id}: #{reply_text}"
         end
       end
+
+      entry_size = entry_lines.sum(&:length) + entry_lines.size
+      break if entry_size > budget
+
+      budget -= entry_size
+      message_lines.concat(entry_lines)
     end
+
+    lines.concat(message_lines.reverse)
   end
 end
