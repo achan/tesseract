@@ -39,220 +39,51 @@ using the Slack Events API with user tokens.
           └───────────────────────┘
 ```
 
-## Design Decisions
+## Key Design Decisions
 
-### One Slack app, many installs
-
-A single Slack app is created and installed into each workspace the consultant
-belongs to. Each installation yields a **user token** (`xoxp-`). All
-installations share the same Events API request URL (one Rails endpoint behind
-cloudflared). The `channel` field in each event payload is matched directly
-against tracked channels to route events to the correct workspace.
-
-### User tokens, not bot tokens
-
-As a full member of each workspace, user tokens provide visibility into
-everything the user can see — public channels, private channels, group DMs —
-without needing to be "invited" as a bot to each channel.
-
-### Channel filtering at our layer
-
-The Events API delivers every event the token has access to. The controller
-checks the `channel` field against a configurable allow-list and drops events
-for channels we don't care about.
-
----
-
-## Slack App Configuration
-
-### User Token Scopes
-
-| Scope              | Purpose                              |
-| ------------------ | ------------------------------------ |
-| `channels:history` | Read messages in public channels     |
-| `groups:history`   | Read messages in private channels    |
-| `channels:read`    | Channel metadata                     |
-| `groups:read`      | Private channel metadata             |
-| `reactions:read`   | Emoji reactions                      |
-| `files:read`       | File shares                          |
-| `pins:read`        | Pins                                 |
-| `users:read`       | Resolve user IDs → display names     |
-| `team:read`        | Workspace info                       |
-
-### Event Subscriptions
-
-| Event                      | What it captures             |
-| -------------------------- | ---------------------------- |
-| `message.channels`         | Messages in public channels  |
-| `message.groups`           | Messages in private channels |
-| `reaction_added`           | Emoji reactions added        |
-| `reaction_removed`         | Emoji reactions removed      |
-| `member_joined_channel`    | Members joining channels     |
-| `member_left_channel`      | Members leaving channels     |
-| `pin_added`                | Pinned items                 |
-| `pin_removed`              | Unpinned items               |
-| `file_shared`              | File uploads                 |
-
----
+- **One Slack app, many installs** — single app installed per workspace, each yielding a user token (`xoxp-`); all share one Events API request URL
+- **User tokens, not bot tokens** — gives visibility into public channels, private channels, and group DMs without bot invitations
+- **Channel filtering at our layer** — Events API delivers everything the token can see; controller checks against a configurable allow-list and drops the rest
+- **Signing secret is per app** — single secret shared across all workspace installations
 
 ## Database Schema
 
-### `workspaces`
+Five tables: `workspaces`, `channels`, `events`, `summaries`, `action_items`.
 
-Stores one row per Slack workspace installation.
-
-| Column             | Type          | Notes                              |
-| ------------------ | ------------- | ---------------------------------- |
-| `id`               | bigint (PK)   | Auto-increment                     |
-| `team_name`        | text          | Human-readable name (required)     |
-| `user_token`       | text          | Encrypted `xoxp-` token            |
-| `signing_secret`   | text          | Per-app (same for all rows)        |
-| `created_at`       | datetime      | Default `now()`                    |
-
-### `channels`
-
-Configures which channels to track per workspace.
-
-| Column             | Type          | Notes                              |
-| ------------------ | ------------- | ---------------------------------- |
-| `id`               | bigint (PK)   | Auto-increment                     |
-| `workspace_id`     | bigint (FK)   | → `workspaces.id`                  |
-| `channel_id`       | text          | Slack channel ID                   |
-| `channel_name`     | text          | Human-readable name                |
-| `active`           | boolean       | Toggle tracking on/off             |
-| `created_at`       | datetime      | Default `now()`                    |
-
-Unique constraint: `(workspace_id, channel_id)`.
-
-### `events`
-
-Raw event storage. Rows older than 3 days are purged nightly.
-
-| Column             | Type          | Notes                              |
-| ------------------ | ------------- | ---------------------------------- |
-| `id`               | bigint (PK)   | Auto-increment                     |
-| `workspace_id`     | bigint (FK)   | → `workspaces.id`                  |
-| `event_id`         | text UNIQUE   | Slack event ID (dedup key)         |
-| `channel_id`       | text          | Slack channel ID                   |
-| `event_type`       | text          | e.g. `message`, `reaction_added`   |
-| `user_id`          | text          | Slack user who triggered event     |
-| `ts`               | text          | Slack message timestamp            |
-| `thread_ts`        | text          | Parent thread ts (nullable)        |
-| `payload`          | json          | Full raw event object              |
-| `created_at`       | datetime      | Default `now()`                    |
-
-Index: `(workspace_id, channel_id, created_at)`.
-
-### `summaries`
-
-LLM-generated digests for a channel over a time window.
-
-| Column             | Type          | Notes                              |
-| ------------------ | ------------- | ---------------------------------- |
-| `id`               | bigint (PK)   | Auto-increment                     |
-| `workspace_id`     | bigint (FK)   | → `workspaces.id`                  |
-| `channel_id`       | text          | Slack channel ID                   |
-| `period_start`     | datetime      | Start of summarized window         |
-| `period_end`       | datetime      | End of summarized window           |
-| `summary_text`     | text          | Generated summary                  |
-| `model_used`       | text          | e.g. `claude-sonnet-4-5-20250929`  |
-| `created_at`       | datetime      | Default `now()`                    |
-
-### `action_items`
-
-Action items extracted during summarization.
-
-| Column             | Type          | Notes                              |
-| ------------------ | ------------- | ---------------------------------- |
-| `id`               | bigint (PK)   | Auto-increment                     |
-| `summary_id`       | bigint (FK)   | → `summaries.id`                   |
-| `workspace_id`     | bigint (FK)   | → `workspaces.id`                  |
-| `channel_id`       | text          | Slack channel ID                   |
-| `description`      | text          | What needs to be done              |
-| `assignee_user_id` | text          | Slack user ID (nullable)           |
-| `source_ts`        | text          | Link to originating message        |
-| `status`           | text          | `open` / `done` / `dismissed`      |
-| `created_at`       | datetime      | Default `now()`                    |
-
----
+- **workspaces** — one row per Slack install; stores `team_name` and encrypted `user_token`
+- **channels** — which channels to track per workspace; unique on `(workspace_id, channel_id)`; has `active` toggle
+- **events** — raw event storage; deduped on `event_id` (UNIQUE); indexed on `(workspace_id, channel_id, created_at)`; purged after 3 days
+- **summaries** — LLM-generated digests per channel over a time window; stores `period_start`/`period_end`, `summary_text`, `model_used`
+- **action_items** — extracted during summarization; linked to a summary; has `status` (`open`/`done`/`dismissed`); open items survive cleanup
 
 ## API Endpoints & Jobs
 
-### 1. `Api::SlackEventsController` — Webhook Receiver
-
-**Route:** `POST /api/slack/events`
-
-Responsibilities:
-1. Handle Slack's `url_verification` challenge (return `challenge` value).
-2. Verify request signature using the app's `signing_secret`.
-3. Look up `channel` → active `SlackChannel` (implicitly resolves workspace).
-4. Upsert into `events` table (dedup on `event_id`).
-6. Return `200 OK` immediately.
-
-**Critical:** Must respond within 3 seconds. No LLM calls here.
-
-### 2. `SummarizeJob` — Digest Generator
-
-**Trigger:** solid_queue recurring schedule (e.g. daily) or on-demand via
-`POST /api/summaries/generate`.
-
-Responsibilities:
-1. Query `events` for a time window (e.g. last 24h) per active channel.
-2. Group messages by channel and thread.
-3. Call Claude API with a summarization + action-item-extraction prompt.
-4. Write results to `summaries` and `action_items` tables.
-
-### 3. `CleanupJob` — Stale Data Purge
-
-**Trigger:** solid_queue recurring schedule (nightly).
-
-Responsibilities:
-1. Delete rows from `events` where `created_at < 3.days.ago`.
-2. Delete rows from `summaries` where `created_at < 3.days.ago`.
-3. Delete rows from `action_items` where `created_at < 3.days.ago`
-   and `status != 'open'` (keep unresolved action items).
-4. Log deleted row counts per table.
-
----
+- **`POST /api/slack/events`** — webhook receiver; handles `url_verification`, verifies signing secret, upserts event, returns 200 immediately
+- **`SummarizeJob`** — runs on schedule (daily) or on-demand via `POST /api/summaries/generate`; groups events by channel/thread, calls Claude, writes summaries + action items
+- **`CleanupJob`** — nightly; deletes events/summaries older than 3 days; keeps open action items
 
 ## Important Constraints
 
-### 3-second response rule
-Slack drops the webhook connection if the response takes longer than 3 seconds.
-The event handler must write to the DB and return immediately — never call an
-LLM or do heavy processing in the request path.
+- **3-second response rule** — Slack drops the connection after 3s; never do heavy processing in the request path
+- **Duplicate delivery** — Slack retries; `event_id` UNIQUE constraint ensures idempotent inserts
+- **Token security** — `xoxp-` tokens grant broad access; stored with Active Record Encryption; never expose in client code or logs
+- **cloudflared must be running** — Rails runs locally; tunnel must be up for Slack to deliver events
 
-### Duplicate event delivery
-Slack may retry delivery. The `event_id` column with a UNIQUE constraint
-ensures idempotent inserts (use `INSERT ... ON CONFLICT DO NOTHING` or
-Active Record's `create_or_find_by`).
+## Slack App Configuration
 
-### Token security
-User tokens (`xoxp-`) grant broad access. Store them encrypted using Active
-Record Encryption. Never expose in client-side code or logs.
+**User token scopes:** `channels:history`, `groups:history`, `channels:read`, `groups:read`, `reactions:read`, `files:read`, `pins:read`, `users:read`, `team:read`
 
-### Signing secret is per app
-Since all workspaces share one Slack app, there is a single signing secret used
-for request verification across all workspace installations.
-
-### cloudflared tunnel
-The Rails server runs locally and is exposed to the internet via a cloudflared
-tunnel. Slack delivers events to the tunnel's public URL, which forwards
-requests to `localhost`. Keep the tunnel running whenever the server is active.
-
----
+**Event subscriptions:** `message.channels`, `message.groups`, `reaction_added`, `reaction_removed`, `member_joined_channel`, `member_left_channel`, `pin_added`, `pin_removed`, `file_shared`
 
 ## Build Order
 
-1. `rails new` with API-only mode + SQLite
-2. Database migrations for all tables
-3. Active Record models with associations and validations
-4. `Api::SlackEventsController` (webhook receiver + signature verification)
-5. Slack app creation + install into one test workspace
-6. Verify events flow into the database
-7. Channel config + filtering logic
-8. `SummarizeJob` with Claude API
-9. Action items extraction
-10. `CleanupJob` (solid_queue recurring, nightly)
-11. cloudflared tunnel setup + Slack request URL config
-12. Install into remaining workspaces
+1. `rails new` (API-only + SQLite)
+2. Migrations, models, associations
+3. `SlackEventsController` + signature verification
+4. Slack app creation + test install
+5. Channel config + filtering
+6. `SummarizeJob` with Claude API
+7. Action items extraction
+8. `CleanupJob` (nightly via solid_queue)
+9. cloudflared tunnel setup
+10. Install into remaining workspaces
