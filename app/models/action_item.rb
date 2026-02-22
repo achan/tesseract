@@ -63,7 +63,7 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_dashboard_append
-    return unless source.is_a?(SlackChannel) && status.in?(DASHBOARD_STATUSES)
+    return unless source.is_a?(SlackChannel) && status.in?(DASHBOARD_STATUSES) && !archived?
 
     broadcast_append_to(
       "dashboard_action_items",
@@ -76,7 +76,7 @@ class ActionItem < ApplicationRecord
   def broadcast_dashboard_update
     return unless source.is_a?(SlackChannel)
 
-    if status.in?(DASHBOARD_STATUSES)
+    if status.in?(DASHBOARD_STATUSES) && !archived?
       broadcast_replace_to(
         "dashboard_action_items",
         target: "dashboard_action_item_#{id}",

@@ -3,6 +3,7 @@ class DashboardController < ApplicationController
     @live_activities = LiveActivity.visible
 
     @action_items = ActionItem
+      .active
       .where(status: ActionItem::DASHBOARD_STATUSES)
       .where(source_type: "SlackChannel")
       .order(
