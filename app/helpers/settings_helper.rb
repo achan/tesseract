@@ -13,11 +13,16 @@ module SettingsHelper
     if time.nil?
       [:red, "Never"]
     elsif time > green_threshold.ago
-      [:green, "#{short_time_ago(time)} ago"]
+      [:green, time_ago_label(time)]
     elsif time > yellow_threshold.ago
-      [:yellow, "#{short_time_ago(time)} ago"]
+      [:yellow, time_ago_label(time)]
     else
-      [:red, "#{short_time_ago(time)} ago"]
+      [:red, time_ago_label(time)]
     end
+  end
+
+  def time_ago_label(time)
+    relative = short_time_ago(time)
+    relative == "now" ? "just now" : "#{relative} ago"
   end
 end
