@@ -105,26 +105,26 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #0a0a0a;
-    --color-foreground: #fafafa;
-    --color-muted: #a3a3a3;
-    --color-muted-foreground: #a3a3a3;
-    --color-border: #262626;
-    --color-card: #171717;
-    --color-card-foreground: #fafafa;
-    --color-primary: #fafafa;
-    --color-primary-foreground: #171717;
-    --color-secondary: #262626;
-    --color-secondary-foreground: #fafafa;
+    --color-background: #1a1a1e;
+    --color-foreground: #e8e8ed;
+    --color-muted: #a0a0a8;
+    --color-muted-foreground: #a0a0a8;
+    --color-border: #2e2e34;
+    --color-card: #232328;
+    --color-card-foreground: #e8e8ed;
+    --color-primary: #e8e8ed;
+    --color-primary-foreground: #1a1a1e;
+    --color-secondary: #2e2e34;
+    --color-secondary-foreground: #e8e8ed;
     --color-destructive: #ef4444;
-    --color-destructive-foreground: #fafafa;
+    --color-destructive-foreground: #e8e8ed;
     --color-success: #22c55e;
-    --color-success-foreground: #fafafa;
-    --color-accent: #262626;
-    --color-accent-foreground: #fafafa;
-    --color-sidebar: #09090b;
+    --color-success-foreground: #e8e8ed;
+    --color-accent: #2e2e34;
+    --color-accent-foreground: #e8e8ed;
+    --color-sidebar: #16161a;
     --color-sidebar-foreground: #a1a1aa;
-    --color-sidebar-accent: rgba(255, 255, 255, 0.1);
+    --color-sidebar-accent: rgba(255, 255, 255, 0.08);
     --color-sidebar-muted: #71717a;
     --color-ring: #525252;
   }
