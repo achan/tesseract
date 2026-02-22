@@ -11,12 +11,11 @@
       <span class="text-sm">Deploy Endpoint</span>
       <span class="text-sm text-muted flex items-center gap-2">
         <% if @health[:deploy][:configured] %>
-          <%= health_dot(:green) %>
           Configured<%= @health[:deploy][:last_deploy] ? " · last deploy #{time_ago_label(@health[:deploy][:last_deploy])}" : "" %>
         <% else %>
-          <%= health_dot(:red) %>
           Not configured
         <% end %>
+        <%= health_dot(@health[:deploy][:configured] ? :green : :red) %>
       </span>
     </div>
 
@@ -25,8 +24,8 @@
     <div class="flex items-center justify-between py-2">
       <span class="text-sm">Slack Events</span>
       <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(event_status) %>
         Last received <%= event_text %>
+        <%= health_dot(event_status) %>
       </span>
     </div>
 
@@ -35,8 +34,8 @@
     <div class="flex items-center justify-between py-2">
       <span class="text-sm">Summarization</span>
       <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(sum_status) %>
         Last run <%= sum_text %><%= @health[:summarization][:failed] > 0 ? " · #{@health[:summarization][:failed]} failed" : "" %>
+        <%= health_dot(sum_status) %>
       </span>
     </div>
 
@@ -45,8 +44,8 @@
     <div class="flex items-center justify-between py-2">
       <span class="text-sm">Action Items</span>
       <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(ai_status) %>
         Last run <%= ai_text %><%= @health[:action_items][:failed] > 0 ? " · #{@health[:action_items][:failed]} failed" : "" %>
+        <%= health_dot(ai_status) %>
       </span>
     </div>
 
@@ -55,8 +54,8 @@
     <div class="flex items-center justify-between py-2">
       <span class="text-sm">Cleanup Job</span>
       <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(cleanup_status) %>
         Last run <%= cleanup_text %>
+        <%= health_dot(cleanup_status) %>
       </span>
     </div>
 
@@ -69,8 +68,8 @@
         <% end %>
       </span>
       <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(@health[:queue][:workers_alive] > 0 ? :green : :red) %>
         <%= @health[:queue][:in_progress] %> in progress · <%= @health[:queue][:queued] %> queued<%= @health[:queue][:failed_jobs] > 0 ? " · #{@health[:queue][:failed_jobs]} failed" : "" %>
+        <%= health_dot(@health[:queue][:workers_alive] > 0 ? :green : :red) %>
       </span>
     </div>
 
@@ -78,8 +77,8 @@
     <div class="flex items-center justify-between py-2">
       <span class="text-sm">Database Size</span>
       <span class="text-sm text-muted flex items-center gap-2">
-        <%= health_dot(:gray) %>
         <%= @health[:database][:size] ? number_to_human_size(@health[:database][:size]) : "Unknown" %>
+        <%= health_dot(:gray) %>
       </span>
     </div>
   </div>
