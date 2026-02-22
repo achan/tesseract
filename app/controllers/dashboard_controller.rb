@@ -1,4 +1,6 @@
 class DashboardController < ApplicationController
+  EVENTS_PER_PAGE = 50
+
   def index
     @live_activities = LiveActivity.visible
 
@@ -13,11 +15,25 @@ class DashboardController < ApplicationController
 
     @overview = Overview.order(created_at: :desc).first
 
-    @events = SlackEvent
+    events_scope = events_scope()
+    @events = events_scope.limit(EVENTS_PER_PAGE)
+    @has_more_events = events_scope.limit(EVENTS_PER_PAGE + 1).count > EVENTS_PER_PAGE
+  end
+
+  def events
+    scope = events_scope
+    scope = scope.where("slack_events.created_at < ?", Time.parse(params[:before])) if params[:before].present?
+    @events = scope.limit(EVENTS_PER_PAGE)
+    @has_more = scope.limit(EVENTS_PER_PAGE + 1).count > EVENTS_PER_PAGE
+  end
+
+  private
+
+  def events_scope
+    SlackEvent
       .messages
       .joins(:slack_channel).where(slack_channels: { hidden: false })
       .includes(slack_channel: :workspace)
-      .where("slack_events.created_at > ?", 5.hours.ago)
       .order(created_at: :desc)
   end
 end

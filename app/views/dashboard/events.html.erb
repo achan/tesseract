@@ -1,0 +1,10 @@
+<%= turbo_frame_tag "dashboard_events_page_#{params[:before]}" do %>
+  <% @events.each do |event| %>
+    <%= render "dashboard/event", event: event %>
+  <% end %>
+  <% if @has_more && @events.any? %>
+    <%= turbo_frame_tag "dashboard_events_page_#{@events.last.created_at.iso8601(6)}",
+          src: dashboard_events_path(before: @events.last.created_at.iso8601(6)),
+          loading: :lazy %>
+  <% end %>
+<% end %>
