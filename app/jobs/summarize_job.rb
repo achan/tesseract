@@ -45,7 +45,7 @@ class SummarizeJob < ApplicationJob
   def call_claude(prompt)
     output, status = Open3.capture2(
       { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
-      "claude", "-p", "-",
+      "claude", "-p",
       "--output-format", "text",
       stdin_data: prompt
     )
