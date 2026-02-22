@@ -7,67 +7,79 @@
 
   <div class="divide-y divide-border">
     <%# Deploy endpoint %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1">Deploy Endpoint</span>
-      <span class="text-sm text-muted">
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Deploy Endpoint</span>
+      <span class="text-sm text-muted flex items-center gap-2">
         <% if @health[:deploy][:configured] %>
           Configured<%= @health[:deploy][:last_deploy] ? " · last deploy #{time_ago_label(@health[:deploy][:last_deploy])}" : "" %>
         <% else %>
           Not configured
         <% end %>
+        <%= health_dot(@health[:deploy][:configured] ? :green : :red) %>
       </span>
-      <%= health_dot(@health[:deploy][:configured] ? :green : :red) %>
     </div>
 
     <%# Slack events %>
     <% event_status, event_text = health_time_status(@health[:slack_events][:last_received]) %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1">Slack Events</span>
-      <span class="text-sm text-muted">Last received <%= event_text %></span>
-      <%= health_dot(event_status) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Slack Events</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        Last received <%= event_text %>
+        <%= health_dot(event_status) %>
+      </span>
     </div>
 
     <%# Summarization %>
     <% sum_status, sum_text = health_time_status(@health[:summarization][:last_run], green_threshold: 24.hours, yellow_threshold: 72.hours) %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1">Summarization</span>
-      <span class="text-sm text-muted">Last run <%= sum_text %><%= @health[:summarization][:failed] > 0 ? " · #{@health[:summarization][:failed]} failed" : "" %></span>
-      <%= health_dot(sum_status) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Summarization</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        Last run <%= sum_text %><%= @health[:summarization][:failed] > 0 ? " · #{@health[:summarization][:failed]} failed" : "" %>
+        <%= health_dot(sum_status) %>
+      </span>
     </div>
 
     <%# Action items %>
     <% ai_status, ai_text = health_time_status(@health[:action_items][:last_run], green_threshold: 24.hours, yellow_threshold: 72.hours) %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1">Action Items</span>
-      <span class="text-sm text-muted">Last run <%= ai_text %><%= @health[:action_items][:failed] > 0 ? " · #{@health[:action_items][:failed]} failed" : "" %></span>
-      <%= health_dot(ai_status) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Action Items</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        Last run <%= ai_text %><%= @health[:action_items][:failed] > 0 ? " · #{@health[:action_items][:failed]} failed" : "" %>
+        <%= health_dot(ai_status) %>
+      </span>
     </div>
 
     <%# Cleanup %>
     <% cleanup_status, cleanup_text = health_time_status(@health[:cleanup][:last_run], green_threshold: 25.hours, yellow_threshold: 48.hours) %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1">Cleanup Job</span>
-      <span class="text-sm text-muted">Last run <%= cleanup_text %></span>
-      <%= health_dot(cleanup_status) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Cleanup Job</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        Last run <%= cleanup_text %>
+        <%= health_dot(cleanup_status) %>
+      </span>
     </div>
 
     <%# Queue health %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1 flex items-center gap-1">
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm flex items-center gap-1">
         Queue Health
         <%= link_to mission_control_jobs_path, class: "text-muted hover:text-foreground" do %>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         <% end %>
       </span>
-      <span class="text-sm text-muted"><%= @health[:queue][:in_progress] %> in progress · <%= @health[:queue][:queued] %> queued<%= @health[:queue][:failed_jobs] > 0 ? " · #{@health[:queue][:failed_jobs]} failed" : "" %></span>
-      <%= health_dot(@health[:queue][:workers_alive] > 0 ? :green : :red) %>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= @health[:queue][:in_progress] %> in progress · <%= @health[:queue][:queued] %> queued<%= @health[:queue][:failed_jobs] > 0 ? " · #{@health[:queue][:failed_jobs]} failed" : "" %>
+        <%= health_dot(@health[:queue][:workers_alive] > 0 ? :green : :red) %>
+      </span>
     </div>
 
     <%# Database size %>
-    <div class="flex items-center gap-2 py-2">
-      <span class="text-sm flex-1">Database Size</span>
-      <span class="text-sm text-muted"><%= @health[:database][:size] ? number_to_human_size(@health[:database][:size]) : "Unknown" %></span>
-      <%= health_dot(:gray) %>
+    <div class="flex items-center justify-between py-2">
+      <span class="text-sm">Database Size</span>
+      <span class="text-sm text-muted flex items-center gap-2">
+        <%= @health[:database][:size] ? number_to_human_size(@health[:database][:size]) : "Unknown" %>
+        <%= health_dot(:gray) %>
+      </span>
     </div>
   </div>
 </div>
