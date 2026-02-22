@@ -1,6 +1,7 @@
 class Workspace < ApplicationRecord
   encrypts :user_token
 
+  belongs_to :profile
   has_many :slack_channels, dependent: :destroy
 
   validates :team_name, presence: true

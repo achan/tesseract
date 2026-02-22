@@ -9,7 +9,7 @@ class SlackChannelsController < ApplicationController
     @summaries = @channel.all_summaries.order(created_at: :desc)
     @summary = @summaries.first
     @action_items = @channel.all_action_items.active.where(status: %w[todo done]).order(created_at: :asc)
-    @workspaces = Workspace.includes(:slack_channels).all
+    @workspaces = Workspace.includes(:slack_channels).where(id: active_workspace_ids)
   end
 
   EVENTS_PER_PAGE = 50

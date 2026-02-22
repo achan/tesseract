@@ -7,6 +7,7 @@ class DashboardController < ApplicationController
     @action_items = ActionItem
       .active
       .where(status: ActionItem::DASHBOARD_STATUSES)
+      .where("source_type IS NULL OR (source_type = 'SlackChannel' AND source_id IN (?))", active_slack_channel_ids)
       .order(
         Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'todo' THEN 1 END"),
         priority: :asc,
@@ -32,7 +33,7 @@ class DashboardController < ApplicationController
   def events_scope
     SlackEvent
       .messages
-      .joins(:slack_channel).where(slack_channels: { hidden: false })
+      .joins(:slack_channel).where(slack_channels: { hidden: false, workspace_id: active_workspace_ids })
       .includes(slack_channel: :workspace)
       .order(created_at: :desc)
   end

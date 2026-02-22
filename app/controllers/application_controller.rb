@@ -30,4 +30,14 @@ class ApplicationController < ActionController::Base
     ENV["HTTP_BASIC_AUTH_USERNAME"].present? && ENV["HTTP_BASIC_AUTH_PASSWORD"].present?
   end
   helper_method :http_basic_auth_configured?
+
+  def active_workspace_ids
+    @active_workspace_ids ||= Workspace.joins(:profile).where(profiles: { enabled: true }).pluck(:id)
+  end
+  helper_method :active_workspace_ids
+
+  def active_slack_channel_ids
+    @active_slack_channel_ids ||= SlackChannel.where(workspace_id: active_workspace_ids).pluck(:id)
+  end
+  helper_method :active_slack_channel_ids
 end

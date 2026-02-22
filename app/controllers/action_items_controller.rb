@@ -4,6 +4,7 @@ class ActionItemsController < ApplicationController
     @archived = params[:archived] == "true"
 
     @action_items = scope
+      .where("source_type IS NULL OR (source_type = 'SlackChannel' AND source_id IN (?))", active_slack_channel_ids)
       .order(priority: :asc, created_at: :desc)
 
     @columns = ActionItem::KANBAN_COLUMNS.map do |status|
