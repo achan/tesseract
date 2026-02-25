@@ -1,7 +1,7 @@
 class ActionItem < ApplicationRecord
   STATUSES = %w[untriaged backlog todo in_progress done wont_fix].freeze
   KANBAN_COLUMNS = %w[untriaged backlog todo in_progress done wont_fix].freeze
-  DASHBOARD_STATUSES = %w[untriaged todo].freeze
+  DASHBOARD_STATUSES = %w[untriaged in_progress todo].freeze
 
   belongs_to :summary, optional: true
   belongs_to :source, polymorphic: true
@@ -74,10 +74,20 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_dashboard_update
-    if status.in?(DASHBOARD_STATUSES) && !archived?
+    previously_visible = previous_dashboard_status.in?(DASHBOARD_STATUSES) && !archived_at_before_last_save.present?
+    now_visible = status.in?(DASHBOARD_STATUSES) && !archived?
+
+    if now_visible && previously_visible
       broadcast_replace_to(
         "dashboard_action_items",
         target: "dashboard_action_item_#{id}",
+        partial: "dashboard/action_item",
+        locals: { action_item: self }
+      )
+    elsif now_visible
+      broadcast_append_to(
+        "dashboard_action_items",
+        target: "dashboard_action_items",
         partial: "dashboard/action_item",
         locals: { action_item: self }
       )
@@ -121,6 +131,10 @@ class ActionItem < ApplicationRecord
         locals: { action_item: self }
       )
     end
+  end
+
+  def previous_dashboard_status
+    saved_change_to_status? ? status_before_last_save : status
   end
 
   def dom_id(record)

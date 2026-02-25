@@ -11,7 +11,7 @@
 
 <div data-controller="item-count">
   <h2 class="text-xl font-semibold mb-4 px-8"><%= link_to "Action Items", action_items_path, class: "hover:underline" %><span data-item-count-target="count"><%= " (#{@action_items.size})" if @action_items.any? %></span></h2>
-  <div id="dashboard_action_items" data-item-count-target="items" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8 px-8" <%= "hidden" if @action_items.empty? %>>
+  <div id="dashboard_action_items" data-item-count-target="items" data-controller="sorted-list" class="flex items-stretch gap-3 overflow-x-auto pb-2 mb-8 px-8" <%= "hidden" if @action_items.empty? %>>
     <% @action_items.each do |action_item| %>
       <%= render "dashboard/action_item", action_item: action_item %>
     <% end %>

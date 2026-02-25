@@ -12,7 +12,7 @@ class DashboardController < ApplicationController
         active_slack_channel_ids, active_profile_ids
       )
       .order(
-        Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'todo' THEN 1 END"),
+        Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2 END"),
         priority: :asc,
         created_at: :asc
       )

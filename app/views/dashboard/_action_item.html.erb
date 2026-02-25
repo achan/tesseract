@@ -17,8 +17,11 @@
   when "todo" then "bg-indigo-600 text-white hover:bg-indigo-700"
   else "bg-primary text-primary-foreground hover:bg-primary/90"
   end
+
+  status_order = { "untriaged" => 0, "in_progress" => 1, "todo" => 2 }
+  sort_key = "#{status_order[action_item.status] || 9}-#{action_item.priority}-#{action_item.created_at.to_i}"
 %>
-<div id="dashboard_action_item_<%= action_item.id %>" class="flex flex-col w-[320px] shrink-0 p-3 border border-border rounded-md <%= priority_classes %>">
+<div id="dashboard_action_item_<%= action_item.id %>" data-sort-key="<%= sort_key %>" class="flex flex-col w-[320px] shrink-0 p-3 border border-border rounded-md <%= priority_classes %>">
   <div class="flex items-start justify-between gap-2 mb-1">
     <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= priority_label_classes %>">P<%= action_item.priority %></span>
     <% if action_item.source.is_a?(SlackChannel) %>
