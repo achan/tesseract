@@ -1,0 +1,41 @@
+<div id="feed_column_<%= feed.id %>" class="w-[400px] shrink-0 snap-start flex flex-col" data-feed-id="<%= feed.id %>">
+  <%= turbo_stream_from feed.stream_name %>
+
+  <div class="bg-card border border-border rounded-lg flex flex-col max-h-[calc(100vh-200px)]">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+      <h3 class="font-semibold text-sm truncate"><%= feed.name %></h3>
+      <div class="flex items-center gap-1">
+        <button type="button" title="Edit column"
+                data-action="deck#openEditModal"
+                data-feed-id="<%= feed.id %>"
+                data-feed-name="<%= feed.name %>"
+                data-feed-source-ids="<%= feed.feed_sources.where(source_type: "SlackChannel").pluck(:source_id).join(",") %>"
+                class="text-muted hover:text-foreground p-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </button>
+        <button type="button" title="Remove column"
+                data-action="deck#removeColumn"
+                data-feed-id="<%= feed.id %>"
+                class="text-muted hover:text-destructive p-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="feed_<%= feed.id %>_items" class="overflow-y-auto p-3 space-y-2">
+      <% feed_items.each do |feed_item| %>
+        <%= render "dashboard/event", event: feed_item.source %>
+      <% end %>
+      <% if feed_has_more && feed_items.any? %>
+        <%= turbo_frame_tag "feed_#{feed.id}_page_#{feed_items.last.occurred_at.iso8601(6)}",
+              src: events_feed_path(feed, before: feed_items.last.occurred_at.iso8601(6)),
+              loading: :lazy %>
+      <% end %>
+    </div>
+  </div>
+</div>

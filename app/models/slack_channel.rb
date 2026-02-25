@@ -6,6 +6,7 @@ class SlackChannel < ApplicationRecord
   has_many :slack_events, dependent: :destroy
   has_many :summaries, as: :source, dependent: :destroy
   has_many :action_items, as: :source, dependent: :destroy
+  has_many :feed_sources, as: :source, dependent: :destroy
 
   validates :channel_id, presence: true, uniqueness: { scope: :workspace_id }
 
@@ -13,7 +14,7 @@ class SlackChannel < ApplicationRecord
   after_create :link_predecessor
 
   scope :visible, -> { where(hidden: false) }
-  scope :channels, -> { where.not("channel_id LIKE 'D%' OR channel_id LIKE 'G%'") }
+  scope :channels, -> { where.not("slack_channels.channel_id LIKE 'D%' OR slack_channels.channel_id LIKE 'G%'") }
   scope :current, -> { left_joins(:successor).where(successor: { id: nil }) }
 
   def display_name
