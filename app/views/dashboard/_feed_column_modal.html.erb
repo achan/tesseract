@@ -34,6 +34,12 @@
                            class="accent-primary">
                     Auto-include new
                   </label>
+                  <label class="flex items-center gap-1 text-xs text-muted cursor-pointer">
+                    <input type="checkbox" name="include_dms_workspace_ids[]" value="<%= workspace.id %>"
+                           data-deck-target="includeDmsCheckbox" data-workspace-id="<%= workspace.id %>"
+                           class="accent-primary">
+                    Include DMs
+                  </label>
                   <button type="button" class="text-xs text-primary hover:underline"
                           data-action="deck#toggleWorkspace"
                           data-workspace-id="<%= workspace.id %>">Select All</button>

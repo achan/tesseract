@@ -91,9 +91,13 @@ class SlackChannel < ApplicationRecord
   private
 
   def add_to_auto_include_feeds
-    feed_ids = FeedSource.where(source_type: "Workspace", source_id: workspace_id).pluck(:feed_id)
-    Feed.where(id: feed_ids).find_each do |feed|
-      feed.feed_sources.create_or_find_by!(source: self)
+    FeedSource.where(source_type: "Workspace", source_id: workspace_id).each do |wfs|
+      should_add = if dm?
+        wfs.include_dms?
+      else
+        wfs.auto_include_new_channels?
+      end
+      wfs.feed.feed_sources.create_or_find_by!(source: self) if should_add
     end
   end
 

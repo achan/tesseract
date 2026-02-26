@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_25_000005) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_26_000002) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type", null: false
@@ -48,6 +48,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_25_000005) do
     t.integer "source_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.json "options", default: {}, null: false
     t.index ["feed_id", "source_type", "source_id"], name: "index_feed_sources_on_feed_id_and_source_type_and_source_id", unique: true
     t.index ["feed_id"], name: "index_feed_sources_on_feed_id"
     t.index ["source_type", "source_id"], name: "index_feed_sources_on_source_type_and_source_id"

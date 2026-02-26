@@ -11,6 +11,7 @@
                 data-feed-name="<%= feed.name %>"
                 data-feed-source-ids="<%= feed.feed_sources.where(source_type: "SlackChannel").pluck(:source_id).join(",") %>"
                 data-feed-auto-include-workspace-ids="<%= feed.auto_include_workspace_ids.join(",") %>"
+                data-feed-include-dms-workspace-ids="<%= feed.include_dms_workspace_ids.join(",") %>"
                 class="text-muted hover:text-foreground p-1">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

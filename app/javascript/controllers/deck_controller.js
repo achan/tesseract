@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import Sortable from "sortablejs"
 
 export default class extends Controller {
-  static targets = ["columns", "modal", "modalTitle", "form", "feedId", "nameInput", "sourceCheckbox", "autoIncludeCheckbox"]
+  static targets = ["columns", "modal", "modalTitle", "form", "feedId", "nameInput", "sourceCheckbox", "autoIncludeCheckbox", "includeDmsCheckbox"]
 
   connect() {
     this.sortable = Sortable.create(this.columnsTarget, {
@@ -46,6 +46,7 @@ export default class extends Controller {
     this.nameInputTarget.value = ""
     this.sourceCheckboxTargets.forEach(cb => cb.checked = false)
     this.autoIncludeCheckboxTargets.forEach(cb => cb.checked = false)
+    this.includeDmsCheckboxTargets.forEach(cb => cb.checked = false)
     this.modalTarget.hidden = false
   }
 
@@ -55,6 +56,7 @@ export default class extends Controller {
     const feedName = button.dataset.feedName
     const sourceIds = (button.dataset.feedSourceIds || "").split(",").filter(Boolean)
     const autoWorkspaceIds = (button.dataset.feedAutoIncludeWorkspaceIds || "").split(",").filter(Boolean)
+    const includeDmsWorkspaceIds = (button.dataset.feedIncludeDmsWorkspaceIds || "").split(",").filter(Boolean)
 
     this.modalTitleTarget.textContent = "Edit Column"
     this.feedIdTarget.value = feedId
@@ -64,6 +66,9 @@ export default class extends Controller {
     })
     this.autoIncludeCheckboxTargets.forEach(cb => {
       cb.checked = autoWorkspaceIds.includes(cb.dataset.workspaceId)
+    })
+    this.includeDmsCheckboxTargets.forEach(cb => {
+      cb.checked = includeDmsWorkspaceIds.includes(cb.dataset.workspaceId)
     })
     this.modalTarget.hidden = false
   }
@@ -109,7 +114,8 @@ export default class extends Controller {
         body: JSON.stringify({
           name,
           source_ids: sourceIds,
-          auto_include_workspace_ids: this.autoIncludeCheckboxTargets.filter(cb => cb.checked).map(cb => cb.value)
+          auto_include_workspace_ids: this.autoIncludeCheckboxTargets.filter(cb => cb.checked).map(cb => cb.value),
+          include_dms_workspace_ids: this.includeDmsCheckboxTargets.filter(cb => cb.checked).map(cb => cb.value)
         })
       })
 
