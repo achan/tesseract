@@ -50,6 +50,37 @@ class SlackChannelTest < ActiveSupport::TestCase
     assert_equal general.interaction_description, new_channel.interaction_description
   end
 
+  test "link_predecessor copies feed sources from predecessor" do
+    feed = Feed.create!(name: "My Feed")
+    general = slack_channels(:general)
+    FeedSource.create!(feed: feed, source: general)
+
+    new_channel = SlackChannel.create!(
+      workspace: workspaces(:one),
+      channel_id: "C_GENERAL_NEW",
+      channel_name: "general"
+    )
+
+    assert FeedSource.exists?(feed: feed, source: new_channel)
+  end
+
+  test "link_predecessor copies multiple feed sources from predecessor" do
+    feed_a = Feed.create!(name: "Feed A")
+    feed_b = Feed.create!(name: "Feed B")
+    general = slack_channels(:general)
+    FeedSource.create!(feed: feed_a, source: general)
+    FeedSource.create!(feed: feed_b, source: general)
+
+    new_channel = SlackChannel.create!(
+      workspace: workspaces(:one),
+      channel_id: "C_GENERAL_NEW",
+      channel_name: "general"
+    )
+
+    assert FeedSource.exists?(feed: feed_a, source: new_channel)
+    assert FeedSource.exists?(feed: feed_b, source: new_channel)
+  end
+
   test "link_predecessor skips DMs" do
     channel = SlackChannel.create!(
       workspace: workspaces(:one),

@@ -119,6 +119,10 @@ class SlackChannel < ApplicationRecord
       priority: predecessor_channel.priority,
       interaction_description: predecessor_channel.interaction_description
     )
+
+    predecessor_channel.feed_sources.each do |fs|
+      FeedSource.create_or_find_by!(feed_id: fs.feed_id, source: self)
+    end
   end
 
   def channel_name_unresolved?
