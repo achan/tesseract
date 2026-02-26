@@ -3,17 +3,39 @@ set -euo pipefail
 
 # Copies the production SQLite database into the current worktree's
 # development database, giving you real data to work with locally.
+#
+# Usage:
+#   bin/clone-prod-db          # copy from main worktree's storage/
+#   bin/clone-prod-db --remote # scp from PROD_DB_SCP (e.g. user@host:/path/to/production.sqlite3)
 
 MAIN_REPO="$(git worktree list --porcelain | head -1 | awk '{print $2}')"
-PROD_DB="$MAIN_REPO/storage/production.sqlite3"
-DEV_DB="storage/development.sqlite3"
 
-if [ ! -f "$PROD_DB" ]; then
-  echo "Error: production database not found at $PROD_DB" >&2
-  exit 1
+# Source .env.local for PROD_DB_SCP and other local overrides
+if [ -f .env.local ]; then
+  set -a; source .env.local; set +a
+elif [ -f "$MAIN_REPO/.env.local" ]; then
+  set -a; source "$MAIN_REPO/.env.local"; set +a
 fi
 
-sqlite3 "$PROD_DB" ".backup '$DEV_DB'"
+LOCAL_PROD_DB="$MAIN_REPO/storage/production.sqlite3"
+DEV_DB="storage/development.sqlite3"
 
-echo "Copied $PROD_DB -> $DEV_DB"
+if [ "${1:-}" = "--remote" ]; then
+  if [ -z "${PROD_DB_SCP:-}" ]; then
+    echo "Error: PROD_DB_SCP not set. Export it as user@host:/path/to/production.sqlite3" >&2
+    exit 1
+  fi
+  echo "Downloading from $PROD_DB_SCP ..."
+  scp "$PROD_DB_SCP" "$DEV_DB"
+  echo "Downloaded $PROD_DB_SCP -> $DEV_DB"
+else
+  if [ ! -f "$LOCAL_PROD_DB" ]; then
+    echo "Error: production database not found at $LOCAL_PROD_DB" >&2
+    echo "Hint: use 'bin/clone-prod-db --remote' with PROD_DB_SCP to fetch from a remote server" >&2
+    exit 1
+  fi
+  sqlite3 "$LOCAL_PROD_DB" ".backup '$DEV_DB'"
+  echo "Copied $LOCAL_PROD_DB -> $DEV_DB"
+fi
+
 bin/rails runner "puts \"  Workspaces: #{Workspace.count}\"; puts \"  Channels:   #{SlackChannel.count}\"; puts \"  Events:     #{SlackEvent.count}\""

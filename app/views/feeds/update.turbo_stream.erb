@@ -1,0 +1,8 @@
+<%= turbo_stream.replace "feed_column_#{@feed.id}" do %>
+  <%= render "dashboard/feed_column", feed: @feed,
+        feed_items: @feed_items,
+        feed_has_more: @feed_has_more %>
+<% end %>
+<%= turbo_stream.replace "feed_column_modal" do %>
+  <%= render "dashboard/feed_column_modal", available_channels: @available_channels %>
+<% end %>

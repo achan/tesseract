@@ -6,14 +6,16 @@ class SlackChannel < ApplicationRecord
   has_many :slack_events, dependent: :destroy
   has_many :summaries, as: :source, dependent: :destroy
   has_many :action_items, as: :source, dependent: :destroy
+  has_many :feed_sources, as: :source, dependent: :destroy
 
   validates :channel_id, presence: true, uniqueness: { scope: :workspace_id }
 
   before_save :populate_channel_name, if: -> { channel_name_unresolved? && workspace&.user_token.present? }
   after_create :link_predecessor
+  after_create_commit :add_to_auto_include_feeds
 
   scope :visible, -> { where(hidden: false) }
-  scope :channels, -> { where.not("channel_id LIKE 'D%' OR channel_id LIKE 'G%'") }
+  scope :channels, -> { where.not("slack_channels.channel_id LIKE 'D%' OR slack_channels.channel_id LIKE 'G%'") }
   scope :current, -> { left_joins(:successor).where(successor: { id: nil }) }
 
   def display_name
@@ -87,6 +89,13 @@ class SlackChannel < ApplicationRecord
   end
 
   private
+
+  def add_to_auto_include_feeds
+    feed_ids = FeedSource.where(source_type: "Workspace", source_id: workspace_id).pluck(:feed_id)
+    Feed.where(id: feed_ids).find_each do |feed|
+      feed.feed_sources.create_or_find_by!(source: self)
+    end
+  end
 
   def link_predecessor
     return if channel_name.blank? || channel_name == channel_id || dm? || mpim?

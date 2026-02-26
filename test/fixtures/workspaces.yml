@@ -2,8 +2,10 @@ one:
   team_name: Test Workspace
   user_token: xoxp-test-token-one
   signing_secret: test_signing_secret
+  profile: one
 
 two:
   team_name: Second Workspace
   user_token: xoxp-test-token-two
   signing_secret: other_signing_secret
+  profile: one

@@ -1,0 +1,10 @@
+<%= turbo_frame_tag "feed_#{@feed.id}_page_#{params[:before]}" do %>
+  <% @feed_items.each do |feed_item| %>
+    <%= render "dashboard/event", event: feed_item.source %>
+  <% end %>
+  <% if @has_more && @feed_items.any? %>
+    <%= turbo_frame_tag "feed_#{@feed.id}_page_#{@feed_items.last.occurred_at.iso8601(6)}",
+          src: events_feed_path(@feed, before: @feed_items.last.occurred_at.iso8601(6)),
+          loading: :lazy %>
+  <% end %>
+<% end %>
