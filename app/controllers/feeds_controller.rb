@@ -8,10 +8,8 @@ class FeedsController < ApplicationController
     @feed = Feed.new(name: params[:name], position: max_position + 1)
 
     if @feed.save
-      sync_sources(@feed, params[:source_ids])
-      sync_auto_include_workspaces(@feed, params[:auto_include_workspace_ids])
-      delete_stale_feed_items(@feed)
-      BackfillFeedItemsJob.perform_later(feed_id: @feed.id)
+      add_channel_sources(@feed, Array(params[:source_ids]).map(&:to_i))
+      update_workspace_sources(@feed, params[:auto_include_workspace_ids], params[:include_dms_workspace_ids])
       load_feed_items(@feed)
       @available_channels = available_channels
       respond_to do |format|
@@ -24,11 +22,20 @@ class FeedsController < ApplicationController
 
   def update
     @feed.update!(name: params[:name]) if params[:name].present?
-    sync_auto_include_workspaces(@feed, params[:auto_include_workspace_ids]) if params.key?(:auto_include_workspace_ids)
     if params[:source_ids]
-      sync_sources(@feed, params[:source_ids])
-      delete_stale_feed_items(@feed)
-      BackfillFeedItemsJob.perform_later(feed_id: @feed.id)
+      source_ids = Array(params[:source_ids]).map(&:to_i)
+      dm_channel_ids = SlackChannel.where("channel_id LIKE 'D%'").select(:id)
+      @feed.feed_sources.where(source_type: "SlackChannel")
+        .where.not(source_id: source_ids)
+        .where.not(source_id: dm_channel_ids)
+        .destroy_all
+      existing_ids = @feed.feed_sources.where(source_type: "SlackChannel").pluck(:source_id)
+      (source_ids - existing_ids).each do |channel_id|
+        @feed.feed_sources.create!(source_type: "SlackChannel", source_id: channel_id)
+      end
+    end
+    if params.key?(:auto_include_workspace_ids) || params.key?(:include_dms_workspace_ids)
+      update_workspace_sources(@feed, params[:auto_include_workspace_ids], params[:include_dms_workspace_ids])
     end
     load_feed_items(@feed)
     @available_channels = available_channels
@@ -63,30 +70,39 @@ class FeedsController < ApplicationController
     @feed = Feed.find(params[:id])
   end
 
-  def sync_auto_include_workspaces(feed, workspace_ids)
-    workspace_ids = Array(workspace_ids).map(&:to_i)
-    feed.feed_sources.where(source_type: "Workspace").where.not(source_id: workspace_ids).destroy_all
-    existing_ids = feed.feed_sources.where(source_type: "Workspace").pluck(:source_id)
-    (workspace_ids - existing_ids).each do |wid|
-      feed.feed_sources.create!(source_type: "Workspace", source_id: wid)
-    end
-  end
-
-  def sync_sources(feed, source_ids)
-    source_ids = Array(source_ids).map(&:to_i)
-    feed.feed_sources.where(source_type: "SlackChannel").where.not(source_id: source_ids).destroy_all
+  def add_channel_sources(feed, source_ids)
     existing_ids = feed.feed_sources.where(source_type: "SlackChannel").pluck(:source_id)
     (source_ids - existing_ids).each do |channel_id|
       feed.feed_sources.create!(source_type: "SlackChannel", source_id: channel_id)
     end
   end
 
-  def delete_stale_feed_items(feed)
-    channel_ids = feed.feed_sources.where(source_type: "SlackChannel").pluck(:source_id)
-    feed.feed_items
-      .joins("INNER JOIN slack_events ON feed_items.source_id = slack_events.id AND feed_items.source_type = 'SlackEvent'")
-      .where.not(slack_events: { slack_channel_id: channel_ids })
-      .delete_all
+  def update_workspace_sources(feed, auto_include_workspace_ids, include_dms_workspace_ids)
+    auto_include_ids = Array(auto_include_workspace_ids).map(&:to_i)
+    include_dms_ids = Array(include_dms_workspace_ids).map(&:to_i)
+    all_workspace_ids = auto_include_ids | include_dms_ids
+
+    feed.feed_sources.where(source_type: "Workspace").where.not(source_id: all_workspace_ids).destroy_all
+
+    all_workspace_ids.each do |wid|
+      opts = {
+        "auto_include_new_channels" => auto_include_ids.include?(wid),
+        "include_dms" => include_dms_ids.include?(wid)
+      }
+      fs = feed.feed_sources.find_or_initialize_by(source_type: "Workspace", source_id: wid)
+      was_include_dms = fs.persisted? && fs.include_dms?
+      fs.options = opts
+      fs.save!
+
+      if opts["include_dms"] && !was_include_dms
+        SlackChannel.where(workspace_id: wid).where("channel_id LIKE 'D%'").find_each do |ch|
+          feed.feed_sources.create_or_find_by!(source: ch)
+        end
+      elsif !opts["include_dms"] && was_include_dms
+        dm_channel_ids = SlackChannel.where(workspace_id: wid).where("channel_id LIKE 'D%'").select(:id)
+        feed.feed_sources.where(source_type: "SlackChannel", source_id: dm_channel_ids).destroy_all
+      end
+    end
   end
 
   def load_feed_items(feed)

@@ -19,7 +19,6 @@ class DashboardController < ApplicationController
 
     @overview = pick_overview
 
-    ensure_default_feed
     @feeds = Feed.ordered
     @feed_items = {}
     @feed_has_more = {}
@@ -40,20 +39,6 @@ class DashboardController < ApplicationController
   end
 
   private
-
-  def ensure_default_feed
-    return if Feed.exists?
-
-    feed = Feed.create!(name: "All Messages", position: 0)
-    Workspace.where(id: active_workspace_ids).find_each do |workspace|
-      feed.feed_sources.create!(source: workspace)
-    end
-    SlackChannel.visible.channels.current.where(workspace_id: active_workspace_ids).find_each do |channel|
-      feed.feed_sources.create!(source: channel)
-    end
-
-    BackfillFeedItemsJob.perform_later(feed_id: feed.id)
-  end
 
   def pick_overview
     enabled_profiles = Profile.where(enabled: true)
