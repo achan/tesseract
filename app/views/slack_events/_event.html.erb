@@ -35,14 +35,10 @@
             <% if workspace.team_id.present? && event.ts.present? %>
               <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= event.slack_channel.channel_id %>&message=<%= event.ts.delete(".") %>"
                  class="text-xs text-muted hover:text-foreground" title="Open in Slack">
-                <time datetime="<%= event.created_at.iso8601 %>" data-controller="local-time">
-                  <%= short_time_ago(event.created_at) %>
-                </time>
+                <time datetime="<%= event.created_at.iso8601 %>" data-controller="local-time"></time>
               </a>
             <% else %>
-              <time datetime="<%= event.created_at.iso8601 %>" class="text-xs text-muted" data-controller="local-time">
-                <%= short_time_ago(event.created_at) %>
-              </time>
+              <time datetime="<%= event.created_at.iso8601 %>" class="text-xs text-muted" data-controller="local-time"></time>
             <% end %>
           </div>
         </div>
