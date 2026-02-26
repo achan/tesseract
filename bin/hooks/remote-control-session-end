@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Hook: SessionEnd — called by Claude Code when a remote control session ends.
+# Only acts when TESSERACT_RC_SESSION_ID is set (i.e., spawned by RemoteControlStartJob).
+set -euo pipefail
+
+[ -z "${TESSERACT_RC_SESSION_ID:-}" ] && exit 0
+
+TESSERACT_URL="${TESSERACT_URL:-http://localhost:3000}"
+
+curl -sf -X POST \
+  "${TESSERACT_URL}/api/remote_control_sessions/${TESSERACT_RC_SESSION_ID}/ended" \
+  >/dev/null 2>&1 || true

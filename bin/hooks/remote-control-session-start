@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Hook: SessionStart — called by Claude Code when a remote control session starts.
+# Only acts when TESSERACT_RC_SESSION_ID is set (i.e., spawned by RemoteControlStartJob).
+set -euo pipefail
+
+[ -z "${TESSERACT_RC_SESSION_ID:-}" ] && exit 0
+
+INPUT=$(cat)
+SESSION_ID=$(echo "$INPUT" | ruby -rjson -e 'puts JSON.parse(STDIN.read)["session_id"]' 2>/dev/null || true)
+
+[ -z "$SESSION_ID" ] && exit 0
+
+TESSERACT_URL="${TESSERACT_URL:-http://localhost:3000}"
+
+curl -sf -X POST \
+  "${TESSERACT_URL}/api/remote_control_sessions/${TESSERACT_RC_SESSION_ID}/started" \
+  -H "Content-Type: application/json" \
+  -d "{\"claude_session_id\": \"${SESSION_ID}\"}" \
+  >/dev/null 2>&1 || true
