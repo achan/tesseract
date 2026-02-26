@@ -1,7 +1,6 @@
 <%= turbo_stream_from "dashboard_live_activities" %>
 <%= turbo_stream_from "dashboard_action_items" %>
 <%= turbo_stream_from "dashboard_overview" %>
-<%= turbo_stream_from "dashboard_events" %>
 
 <div id="dashboard_live_activities" class="overflow-x-auto pb-2 whitespace-nowrap mb-6 px-8">
   <% @live_activities.each do |activity| %>
@@ -24,19 +23,30 @@
   <%= render "dashboard/overview", overview: @overview %>
 </div>
 
-<div data-controller="reply-modal" data-action="keydown@window->reply-modal#closeOnKey" class="px-8">
-  <h1 class="text-xl font-semibold mb-6">Message Feed</h1>
-
-  <div id="dashboard_events" class="space-y-2">
-    <% @events.each do |event| %>
-      <%= render "dashboard/event", event: event %>
-    <% end %>
-    <% if @has_more_events && @events.any? %>
-      <%= turbo_frame_tag "dashboard_events_page_#{@events.last.created_at.iso8601(6)}",
-            src: dashboard_events_path(before: @events.last.created_at.iso8601(6)),
-            loading: :lazy %>
-    <% end %>
+<div data-controller="deck reply-modal" data-action="keydown@window->reply-modal#closeOnKey" class="px-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-xl font-semibold">Deck</h1>
+    <button type="button" data-action="deck#openAddModal"
+            class="text-sm px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:opacity-90">
+      + Add Column
+    </button>
   </div>
 
+  <div id="deck_columns" data-deck-target="columns" class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory -mx-8 px-8 scroll-pl-8">
+    <% @feeds.each do |feed| %>
+      <%= render "dashboard/feed_column", feed: feed,
+            feed_items: @feed_items[feed.id],
+            feed_has_more: @feed_has_more[feed.id] %>
+    <% end %>
+
+    <div class="w-[400px] shrink-0 snap-start">
+      <div class="border-2 border-dashed border-border rounded-lg flex items-center justify-center h-48 text-muted cursor-pointer hover:border-primary hover:text-foreground transition-colors"
+           data-action="click->deck#openAddModal">
+        <span class="text-sm">+ Add Column</span>
+      </div>
+    </div>
+  </div>
+
+  <%= render "dashboard/feed_column_modal", available_channels: @available_channels %>
   <%= render "dashboard/reply_modal" %>
 </div>

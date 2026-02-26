@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_22_192803) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_25_000005) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type", null: false
@@ -27,6 +27,38 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_192803) do
     t.index ["source_type", "source_id"], name: "index_action_items_on_source_type_and_source_id"
     t.index ["status"], name: "index_action_items_on_status"
     t.index ["summary_id"], name: "index_action_items_on_summary_id"
+  end
+
+  create_table "feed_items", force: :cascade do |t|
+    t.integer "feed_id", null: false
+    t.text "source_type", null: false
+    t.integer "source_id", null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["feed_id", "occurred_at"], name: "index_feed_items_on_feed_id_and_occurred_at"
+    t.index ["feed_id", "source_type", "source_id"], name: "index_feed_items_uniqueness", unique: true
+    t.index ["feed_id"], name: "index_feed_items_on_feed_id"
+    t.index ["source_type", "source_id"], name: "index_feed_items_on_source_type_and_source_id"
+  end
+
+  create_table "feed_sources", force: :cascade do |t|
+    t.integer "feed_id", null: false
+    t.text "source_type", null: false
+    t.integer "source_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["feed_id", "source_type", "source_id"], name: "index_feed_sources_on_feed_id_and_source_type_and_source_id", unique: true
+    t.index ["feed_id"], name: "index_feed_sources_on_feed_id"
+    t.index ["source_type", "source_id"], name: "index_feed_sources_on_source_type_and_source_id"
+  end
+
+  create_table "feeds", force: :cascade do |t|
+    t.text "name", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["position"], name: "index_feeds_on_position"
   end
 
   create_table "live_activities", force: :cascade do |t|
@@ -116,6 +148,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_22_192803) do
     t.index ["profile_id"], name: "index_workspaces_on_profile_id"
   end
 
+  add_foreign_key "feed_items", "feeds"
+  add_foreign_key "feed_sources", "feeds"
   add_foreign_key "overviews", "profiles"
   add_foreign_key "slack_channels", "slack_channels", column: "predecessor_id"
   add_foreign_key "slack_channels", "workspaces"

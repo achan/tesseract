@@ -3,6 +3,7 @@ class Workspace < ApplicationRecord
 
   belongs_to :profile
   has_many :slack_channels, dependent: :destroy
+  has_many :feed_sources, as: :source, dependent: :destroy
 
   validates :team_name, presence: true
 

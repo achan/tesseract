@@ -1,5 +1,5 @@
 class DashboardController < ApplicationController
-  EVENTS_PER_PAGE = 50
+  ITEMS_PER_PAGE = 50
 
   def index
     @live_activities = LiveActivity.visible
@@ -19,19 +19,41 @@ class DashboardController < ApplicationController
 
     @overview = pick_overview
 
-    events_scope = events_scope()
-    @events = events_scope.limit(EVENTS_PER_PAGE)
-    @has_more_events = events_scope.limit(EVENTS_PER_PAGE + 1).count > EVENTS_PER_PAGE
+    ensure_default_feed
+    @feeds = Feed.ordered
+    @feed_items = {}
+    @feed_has_more = {}
+    @feeds.each do |feed|
+      scope = feed_items_scope(feed)
+      @feed_items[feed.id] = scope.limit(ITEMS_PER_PAGE)
+      @feed_has_more[feed.id] = scope.limit(ITEMS_PER_PAGE + 1).count > ITEMS_PER_PAGE
+    end
+
+    @available_channels = available_channels
   end
 
   def events
     scope = events_scope
     scope = scope.where("slack_events.created_at < ?", Time.parse(params[:before])) if params[:before].present?
-    @events = scope.limit(EVENTS_PER_PAGE)
-    @has_more = scope.limit(EVENTS_PER_PAGE + 1).count > EVENTS_PER_PAGE
+    @events = scope.limit(ITEMS_PER_PAGE)
+    @has_more = scope.limit(ITEMS_PER_PAGE + 1).count > ITEMS_PER_PAGE
   end
 
   private
+
+  def ensure_default_feed
+    return if Feed.exists?
+
+    feed = Feed.create!(name: "All Messages", position: 0)
+    Workspace.where(id: active_workspace_ids).find_each do |workspace|
+      feed.feed_sources.create!(source: workspace)
+    end
+    SlackChannel.visible.channels.current.where(workspace_id: active_workspace_ids).find_each do |channel|
+      feed.feed_sources.create!(source: channel)
+    end
+
+    BackfillFeedItemsJob.perform_later(feed_id: feed.id)
+  end
 
   def pick_overview
     enabled_profiles = Profile.where(enabled: true)
@@ -43,11 +65,26 @@ class DashboardController < ApplicationController
     scope.order(created_at: :desc).first
   end
 
+  def feed_items_scope(feed)
+    feed.feed_items.ordered
+      .joins("INNER JOIN slack_events ON feed_items.source_id = slack_events.id AND feed_items.source_type = 'SlackEvent'")
+      .joins("INNER JOIN slack_channels ON slack_events.slack_channel_id = slack_channels.id")
+      .where(slack_channels: { workspace_id: active_workspace_ids })
+      .includes(source: { slack_channel: :workspace })
+  end
+
   def events_scope
     SlackEvent
       .messages
       .joins(:slack_channel).where(slack_channels: { hidden: false, workspace_id: active_workspace_ids })
       .includes(slack_channel: :workspace)
       .order(created_at: :desc)
+  end
+
+  def available_channels
+    SlackChannel.visible.channels.current
+      .where(workspace_id: active_workspace_ids)
+      .includes(:workspace)
+      .order(:channel_name)
   end
 end

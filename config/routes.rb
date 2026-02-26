@@ -4,6 +4,11 @@ Rails.application.routes.draw do
   root "dashboard#index"
   get "dashboard/events", to: "dashboard#events", as: :dashboard_events
 
+  resources :feeds, only: [:create, :update, :destroy] do
+    get :events, on: :member
+    patch :move, on: :member
+  end
+
   resources :profiles do
     patch :toggle, on: :member
   end
