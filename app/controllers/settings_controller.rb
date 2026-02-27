@@ -23,6 +23,8 @@ class SettingsController < ApplicationController
     db_path = ActiveRecord::Base.connection_db_config.database
     db_size = File.exist?(db_path) ? File.size(db_path) : nil
 
+    @remote_control_session = RemoteControlSession.current
+
     @health = {
       deploy: { configured: ENV["GITHUB_WEBHOOK_SECRET"].present?, last_deploy: last_deploy },
       slack_events: { last_received: last_event },

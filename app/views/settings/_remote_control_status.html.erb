@@ -1,0 +1,46 @@
+<div id="remote_control_status">
+  <% if session&.status&.in?(%w[starting running stopping]) %>
+    <div class="flex items-center justify-between py-2">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2 mb-1">
+          <% case session.status %>
+          <% when "starting" %>
+            <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+            <span class="text-sm font-medium">Starting...</span>
+          <% when "running" %>
+            <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+            <span class="text-sm font-medium">Running</span>
+          <% when "stopping" %>
+            <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+            <span class="text-sm font-medium">Stopping...</span>
+          <% end %>
+        </div>
+        <% if session.session_url.present? %>
+          <div class="flex items-center gap-2">
+            <code class="text-xs text-muted truncate block max-w-xs"><%= session.session_url %></code>
+            <button
+              data-controller="clipboard"
+              data-clipboard-text-value="<%= session.session_url %>"
+              data-action="click->clipboard#copy"
+              class="text-xs text-primary hover:underline cursor-pointer shrink-0"
+            >Copy</button>
+          </div>
+        <% end %>
+      </div>
+      <% if session.status.in?(%w[starting running]) %>
+        <%= button_to "Stop", remote_control_session_path(session), method: :delete,
+              class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-red-600 text-white rounded-md hover:bg-red-700 cursor-pointer disabled:opacity-50 disabled:cursor-default shrink-0 ml-4" %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="flex items-center justify-between py-2">
+      <div>
+        <span class="text-sm">Remote Control</span>
+        <p class="text-xs text-muted">Start a Claude Code remote control session for this project.</p>
+      </div>
+      <%= button_to "Start", remote_control_sessions_path, method: :post,
+            class: "inline-flex items-center px-3 py-1.5 text-sm font-medium bg-secondary text-secondary-foreground rounded-md hover:bg-accent cursor-pointer disabled:opacity-50 disabled:cursor-default",
+            form: { data: { controller: "submit-button", action: "turbo:submit-end->submit-button#submit" } } %>
+    </div>
+  <% end %>
+</div>
