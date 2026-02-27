@@ -57,6 +57,16 @@ class Workspace < ApplicationRecord
     nil
   end
 
+  def owner_identity_context
+    uid = authenticated_user_id
+    return nil if uid.blank?
+
+    profile = resolve_user_profile(uid)
+    handle_part = profile[:handle].present? ? ", handle: @#{profile[:handle]}" : ""
+    "You are analyzing these messages on behalf of #{profile[:name]} (Slack user ID: #{uid}#{handle_part}). " \
+      "When messages mention <@#{uid}> or reference #{profile[:name]}, they are addressed to this user."
+  end
+
   def slack_client
     Slack::Web::Client.new(token: user_token)
   end

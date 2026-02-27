@@ -140,6 +140,14 @@ class GenerateOverviewJob < ApplicationJob
     end
     lines << ""
 
+    overview_workspace = @profile ? @profile.workspaces.first : Workspace.first
+    identity = overview_workspace&.owner_identity_context
+    if identity.present?
+      lines << "## Your Identity"
+      lines << identity
+      lines << ""
+    end
+
     # Messages
     lines << "## Messages"
     lines << ""

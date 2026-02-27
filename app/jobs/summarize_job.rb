@@ -78,6 +78,14 @@ class SummarizeJob < ApplicationJob
     lines << "Priority: #{channel.priority} (1=highest, 5=lowest)"
     lines << "Interaction description: #{channel.interaction_description}" if channel.interaction_description.present?
     lines << ""
+
+    identity = channel.workspace.owner_identity_context
+    if identity.present?
+      lines << "## Your Identity"
+      lines << identity
+      lines << ""
+    end
+
     lines << "## Messages"
     lines << ""
 
