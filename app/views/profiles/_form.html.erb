@@ -15,6 +15,14 @@
           class: "w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent" %>
   </div>
 
+  <div class="mb-4">
+    <%= f.label :role_context, "Role & Responsibilities", class: "block text-sm font-semibold mb-1" %>
+    <p class="text-xs text-muted mb-1">Describe your role so action items can be filtered by relevance to you. Example: "Principal developer and devops engineer. Responsible for infrastructure, deployments, code reviews, and architecture decisions."</p>
+    <%= f.text_area :role_context, rows: 3,
+          placeholder: "e.g. Principal developer and devops. Responsible for infrastructure, deployments, and code reviews.",
+          class: "w-full px-3 py-2 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-y" %>
+  </div>
+
   <div class="flex gap-3 mt-6">
     <%= f.submit class: "inline-flex items-center px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 cursor-pointer" %>
     <%= link_to "Cancel", profile.persisted? ? profile_path(profile) : settings_path,

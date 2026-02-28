@@ -1,3 +1,4 @@
 one:
   name: Test Profile
   enabled: true
+  role_context: "Principal developer and devops engineer. Responsible for infrastructure, deployments, code reviews, and architecture decisions."
