@@ -23,7 +23,7 @@
         class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-primary resize-y" %>
   </div>
 
-  <div class="grid grid-cols-2 gap-4 mb-4">
+  <div class="grid grid-cols-3 gap-4 mb-4">
     <div>
       <%= f.label :priority, "Priority", class: "block text-sm font-semibold mb-1" %>
       <%= f.select :priority, (1..5).map { |n| ["P#{n}", n] },
@@ -33,6 +33,12 @@
     <div>
       <%= f.label :status, "Status", class: "block text-sm font-semibold mb-1" %>
       <%= f.select :status, ActionItem::KANBAN_COLUMNS.map { |s| [ActionItem::STATUS_LABELS[s] || s.titleize, s] },
+          {}, class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" %>
+    </div>
+
+    <div>
+      <%= f.label :relevance, "Relevance", class: "block text-sm font-semibold mb-1" %>
+      <%= f.select :relevance, [["Direct", "direct"], ["Watching", "watching"]],
           {}, class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" %>
     </div>
   </div>

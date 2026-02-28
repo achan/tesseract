@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_26_000002) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_28_000002) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type", null: false
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_26_000002) do
     t.datetime "updated_at", null: false
     t.integer "priority", default: 3, null: false
     t.datetime "archived_at"
+    t.text "relevance", default: "direct", null: false
     t.index ["archived_at"], name: "index_action_items_on_archived_at"
     t.index ["source_type", "source_id"], name: "index_action_items_on_source_type_and_source_id"
     t.index ["status"], name: "index_action_items_on_status"
@@ -90,6 +91,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_26_000002) do
     t.boolean "enabled", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "role_context"
   end
 
   create_table "slack_channels", force: :cascade do |t|

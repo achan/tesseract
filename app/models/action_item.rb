@@ -2,6 +2,7 @@ class ActionItem < ApplicationRecord
   STATUSES = %w[untriaged backlog todo in_progress done wont_fix].freeze
   KANBAN_COLUMNS = %w[untriaged backlog todo in_progress done wont_fix].freeze
   DASHBOARD_STATUSES = %w[untriaged in_progress todo].freeze
+  RELEVANCES = %w[direct watching].freeze
 
   belongs_to :summary, optional: true
   belongs_to :source, polymorphic: true
@@ -9,6 +10,7 @@ class ActionItem < ApplicationRecord
   validates :description, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: 1..5 }
+  validates :relevance, inclusion: { in: RELEVANCES }
 
   STATUS_LABELS = {
     "todo" => "To Do",

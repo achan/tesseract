@@ -122,6 +122,6 @@ class ActionItemsController < ApplicationController
   private
 
   def action_item_params
-    params.require(:action_item).permit(:description, :priority, :assignee_user_id, :status, :source_id, :source_type)
+    params.require(:action_item).permit(:description, :priority, :assignee_user_id, :status, :relevance, :source_id, :source_type)
   end
 end

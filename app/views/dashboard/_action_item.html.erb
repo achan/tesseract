@@ -24,7 +24,12 @@
 %>
 <div id="dashboard_action_item_<%= action_item.id %>" data-sort-key="<%= sort_key %>" class="flex flex-col w-[320px] shrink-0 p-3 border border-border rounded-md <%= priority_classes %>">
   <div class="flex items-start justify-between gap-2 mb-1">
-    <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= priority_label_classes %>">P<%= action_item.priority %></span>
+    <div class="flex items-center gap-1">
+      <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 <%= priority_label_classes %>">P<%= action_item.priority %></span>
+      <% if action_item.relevance == "watching" %>
+        <span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded shrink-0 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" title="Relevant to your role but not directly assigned to you">Watching</span>
+      <% end %>
+    </div>
     <% if action_item.source.is_a?(SlackChannel) %>
       <span class="text-xs text-muted truncate">#<%= action_item.source.display_name %></span>
     <% end %>

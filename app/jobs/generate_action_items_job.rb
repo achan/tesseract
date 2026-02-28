@@ -38,6 +38,7 @@ class GenerateActionItemsJob < ApplicationJob
         assignee_user_id: item["assignee"],
         source_ts: item["source_ts"],
         priority: item["priority"] || 3,
+        relevance: item["relevance"] == "watching" ? "watching" : "direct",
         status: "untriaged"
       )
     end
@@ -80,24 +81,59 @@ class GenerateActionItemsJob < ApplicationJob
   def build_prompt(grouped, channel)
     existing_items = channel.all_action_items.order(:created_at)
 
-    lines = ["Extract NEW action items from the following Slack channel activity."]
+    lines = ["Extract action items from the following Slack channel activity."]
     lines << ""
-    lines << "Pay special attention to important dates mentioned in messages (deadlines, meetings,"
-    lines << "launches, reviews, etc.) and create action items for them."
+    lines << "## What Counts as an Action Item"
     lines << ""
-    lines << "For each action item, assess its priority (1-5) based on the message content:"
+    lines << "Only create action items for messages that contain a CLEAR, CONCRETE task or request."
+    lines << "An action item must have a specific action someone needs to take."
+    lines << ""
+    lines << "DO create action items for:"
+    lines << "- Direct requests or asks (\"Can you...\", \"Please...\", \"We need to...\")"
+    lines << "- Explicit deadlines or time-sensitive commitments (\"by Friday\", \"before the release\")"
+    lines << "- Decisions that require follow-up action"
+    lines << "- Bugs, outages, or issues that need resolution"
+    lines << "- Commitments someone made (\"I'll do X\", \"Let me look into that\")"
+    lines << ""
+    lines << "Do NOT create action items for:"
+    lines << "- Status updates or informational messages with no action needed"
+    lines << "- General discussion, opinions, or brainstorming without concrete next steps"
+    lines << "- Greetings, acknowledgments, thanks, or social messages"
+    lines << "- Questions that are already answered in the thread"
+    lines << "- Automated bot messages or notifications unless they indicate something broken"
+    lines << "- Vague suggestions without a clear ask (\"it would be nice if...\", \"maybe we should...\")"
+    lines << "- Routine work that people are already doing (\"I'm working on X\" with no ask)"
+    lines << ""
+    lines << "When in doubt, do NOT create an action item. Fewer, higher-quality items are better."
+    lines << ""
+    lines << "## Relevance Classification"
+    lines << ""
+    lines << "Each action item must be classified with a \"relevance\" field:"
+    lines << ""
+    lines << "- \"direct\": The item is addressed to the owner (mentions them by name/handle/user ID,"
+    lines << "  is in a DM with them, asks them specifically, or they are the obvious assignee)."
+    lines << "- \"watching\": The item is NOT directed at the owner, but is relevant to them given"
+    lines << "  their role and responsibilities. They should be aware of it even though someone else"
+    lines << "  is responsible. Only include watching items for things that genuinely matter given"
+    lines << "  the owner's role — not every task in the channel."
+    lines << ""
+    lines << "## Priority Assessment"
+    lines << ""
+    lines << "For each action item, assess its priority (1-5):"
     lines << "- 1: Urgent/blocking — outages, broken builds, security issues, explicit urgency"
     lines << "- 2: High — time-sensitive requests, approaching deadlines, important decisions needed"
     lines << "- 3: Normal — standard tasks, follow-ups, general requests"
     lines << "- 4: Low — nice-to-haves, minor improvements, non-urgent questions"
     lines << "- 5: Minimal — informational, no real action needed soon"
+    lines << ""
     lines << "DMs and group DMs are direct conversations — treat their action items as higher priority"
     lines << "than equivalent items from public channels."
     lines << "Use the channel priority as a baseline but adjust per-item based on content and tone."
     lines << ""
+    lines << "## Output Format"
+    lines << ""
     lines << "Return ONLY valid JSON (no markdown fences) with this structure:"
-    lines << '{ "action_items": [{ "description": "...", "assignee": "user_id or null", "source_ts": "...", "priority": 1-5 }] }'
-    lines << "You may return zero, one, or multiple action items — include as many as are warranted by the messages."
+    lines << '{ "action_items": [{ "description": "...", "assignee": "user_id or null", "source_ts": "...", "priority": 1-5, "relevance": "direct or watching" }] }'
     lines << "If there are no action items, return: { \"action_items\": [] }"
     lines << ""
 
@@ -120,7 +156,7 @@ class GenerateActionItemsJob < ApplicationJob
 
     identity = channel.workspace.owner_identity_context
     if identity.present?
-      lines << "## Your Identity"
+      lines << "## Owner Identity"
       lines << identity
       lines << ""
     end

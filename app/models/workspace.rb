@@ -61,10 +61,16 @@ class Workspace < ApplicationRecord
     uid = authenticated_user_id
     return nil if uid.blank?
 
-    profile = resolve_user_profile(uid)
-    handle_part = profile[:handle].present? ? ", handle: @#{profile[:handle]}" : ""
-    "You are analyzing these messages on behalf of #{profile[:name]} (Slack user ID: #{uid}#{handle_part}). " \
-      "When messages mention <@#{uid}> or reference #{profile[:name]}, they are addressed to this user."
+    slack_profile = resolve_user_profile(uid)
+    handle_part = slack_profile[:handle].present? ? ", handle: @#{slack_profile[:handle]}" : ""
+    context = "You are analyzing these messages on behalf of #{slack_profile[:name]} (Slack user ID: #{uid}#{handle_part}). " \
+      "When messages mention <@#{uid}> or reference #{slack_profile[:name]}, they are addressed to this user."
+
+    if profile.role_context.present?
+      context += "\n\nRole & Responsibilities: #{profile.role_context}"
+    end
+
+    context
   end
 
   def slack_client

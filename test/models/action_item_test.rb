@@ -61,4 +61,35 @@ class ActionItemTest < ActiveSupport::TestCase
     )
     assert item.valid?
   end
+
+  test "validates relevance inclusion" do
+    item = ActionItem.new(
+      source: slack_channels(:general),
+      description: "Test",
+      status: "untriaged",
+      relevance: "invalid"
+    )
+    assert_not item.valid?
+    assert_includes item.errors[:relevance], "is not included in the list"
+  end
+
+  test "relevance defaults to direct" do
+    item = ActionItem.new(
+      source: slack_channels(:general),
+      description: "Test",
+      status: "untriaged"
+    )
+    assert_equal "direct", item.relevance
+  end
+
+  test "relevance can be set to watching" do
+    item = ActionItem.new(
+      source: slack_channels(:general),
+      description: "Test",
+      status: "untriaged",
+      relevance: "watching"
+    )
+    assert item.valid?
+    assert_equal "watching", item.relevance
+  end
 end
