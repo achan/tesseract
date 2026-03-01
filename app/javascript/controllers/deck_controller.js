@@ -9,6 +9,7 @@ export default class extends Controller {
       animation: 150,
       delay: 100,
       delayOnTouchOnly: true,
+      handle: ".feed-column-header",
       draggable: "[data-feed-id]",
       ghostClass: "opacity-30",
       onEnd: this.onReorder.bind(this)
