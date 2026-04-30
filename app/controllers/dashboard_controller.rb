@@ -7,10 +7,7 @@ class DashboardController < ApplicationController
     @action_items = ActionItem
       .active
       .where(status: ActionItem::DASHBOARD_STATUSES)
-      .where(
-        "(source_type = 'SlackChannel' AND source_id IN (?)) OR (source_type = 'Profile' AND source_id IN (?))",
-        active_slack_channel_ids, active_profile_ids
-      )
+      .where(active_source_predicate, active_slack_channel_ids, active_profile_ids, active_slack_channel_ids)
       .order(
         Arel.sql("CASE status WHEN 'untriaged' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'todo' THEN 2 END"),
         priority: :asc,
@@ -71,5 +68,18 @@ class DashboardController < ApplicationController
       .where(workspace_id: active_workspace_ids)
       .includes(:workspace)
       .order(:channel_name)
+  end
+
+  def active_source_predicate
+    <<~SQL.squish
+      (source_type = 'SlackChannel' AND source_id IN (?))
+      OR (source_type = 'Profile' AND source_id IN (?))
+      OR (
+        source_type = 'SlackEvent'
+        AND source_id IN (
+          SELECT id FROM slack_events WHERE slack_channel_id IN (?)
+        )
+      )
+    SQL
   end
 end

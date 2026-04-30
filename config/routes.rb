@@ -16,7 +16,6 @@ Rails.application.routes.draw do
   resources :workspaces, except: :show do
     resources :slack_channels, except: [:index, :new, :create] do
       patch :toggle_hidden, on: :member
-      patch :toggle_actionable, on: :member
       get :events, on: :member
     end
     get "files/:file_id/proxy", to: "slack_files#show", as: :slack_file_proxy

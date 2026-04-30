@@ -4,10 +4,7 @@ class ActionItemsController < ApplicationController
     @archived = params[:archived] == "true"
 
     @action_items = scope
-      .where(
-        "(source_type = 'SlackChannel' AND source_id IN (?)) OR (source_type = 'Profile' AND source_id IN (?))",
-        active_slack_channel_ids, active_profile_ids
-      )
+      .where(active_source_predicate, active_slack_channel_ids, active_profile_ids, active_slack_channel_ids)
       .order(priority: :asc, created_at: :desc)
 
     @columns = ActionItem::KANBAN_COLUMNS.map do |status|
@@ -17,6 +14,7 @@ class ActionItemsController < ApplicationController
 
   def new
     @action_item = ActionItem.new(source_type: "Profile", status: params[:status] || "untriaged", priority: 3)
+    assign_requested_source(@action_item)
 
     respond_to do |format|
       format.turbo_stream do
@@ -122,6 +120,42 @@ class ActionItemsController < ApplicationController
   private
 
   def action_item_params
-    params.require(:action_item).permit(:description, :priority, :assignee_user_id, :status, :source_id, :source_type)
+    params.require(:action_item).permit(:description, :priority, :assignee_user_id, :status, :source_id, :source_type, :source_ts)
+  end
+
+  def assign_requested_source(action_item)
+    source_type = params[:source_type].presence
+    source_id = params[:source_id].presence
+    return if source_type.blank? || source_id.blank?
+
+    source = find_source(source_type, source_id)
+    return unless source
+
+    action_item.source = source
+    action_item.source_ts = params[:source_ts].presence if params[:source_ts].present?
+  end
+
+  def find_source(source_type, source_id)
+    case source_type
+    when "Profile"
+      Profile.find_by(id: source_id)
+    when "SlackChannel"
+      SlackChannel.find_by(id: source_id)
+    when "SlackEvent"
+      SlackEvent.find_by(id: source_id)
+    end
+  end
+
+  def active_source_predicate
+    <<~SQL.squish
+      (source_type = 'SlackChannel' AND source_id IN (?))
+      OR (source_type = 'Profile' AND source_id IN (?))
+      OR (
+        source_type = 'SlackEvent'
+        AND source_id IN (
+          SELECT id FROM slack_events WHERE slack_channel_id IN (?)
+        )
+      )
+    SQL
   end
 end

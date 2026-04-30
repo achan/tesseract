@@ -23,7 +23,9 @@
   <%= render "dashboard/overview", overview: @overview %>
 </div>
 
-<div data-controller="deck reply-modal" data-action="keydown@window->reply-modal#closeOnKey" class="px-8">
+<div data-controller="deck reply-modal action-item-modal"
+     data-action="keydown@window->reply-modal#closeOnKey keydown@document->action-item-modal#closeOnKey"
+     class="px-8">
   <div class="flex items-center justify-between mb-6">
     <h1 class="text-xl font-semibold">Deck</h1>
     <button type="button" data-action="deck#openAddModal"
@@ -49,4 +51,5 @@
 
   <%= render "dashboard/feed_column_modal", available_channels: @available_channels %>
   <%= render "dashboard/reply_modal" %>
+  <%= render "action_items/modal" %>
 </div>

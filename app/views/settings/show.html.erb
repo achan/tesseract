@@ -123,7 +123,6 @@
   <h2 class="text-lg font-semibold mb-4">Channels</h2>
   <p class="text-sm text-muted mb-6">
     Click the star to show or hide a channel from the dashboard feed.
-    Click the bolt to enable or disable auto-summaries.
   </p>
 
   <% Workspace.includes(:slack_channels).find_each do |workspace| %>
@@ -139,7 +138,6 @@
                   class: "text-sm hover:underline" %>
             <div class="flex items-center gap-2">
               <%= render "slack_channels/star", workspace: workspace, channel: channel %>
-              <%= render "slack_channels/actionable", workspace: workspace, channel: channel %>
             </div>
           </li>
         <% end %>

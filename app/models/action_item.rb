@@ -35,16 +35,37 @@ class ActionItem < ApplicationRecord
     archived_at.present?
   end
 
+  def source_channel
+    case source
+    when SlackChannel
+      source
+    when SlackEvent
+      source.slack_channel
+    end
+  end
+
+  def source_label
+    case source
+    when Profile
+      source.name
+    when SlackChannel
+      "##{source.display_name}"
+    when SlackEvent
+      "Message in ##{source.slack_channel.display_name}"
+    end
+  end
+
   after_create_commit :broadcast_append, :broadcast_dashboard_append, :broadcast_kanban_append
   after_update_commit :broadcast_replace, :broadcast_dashboard_update, :broadcast_kanban_move, :broadcast_kanban_archive
 
   private
 
   def broadcast_append
-    return unless source.is_a?(SlackChannel)
+    channel = source_channel
+    return unless channel
 
     broadcast_append_to(
-      "workspace_#{source.workspace_id}_channel_#{source.channel_id}_action_items",
+      "workspace_#{channel.workspace_id}_channel_#{channel.channel_id}_action_items",
       target: "action_items",
       partial: "action_items/action_item",
       locals: { action_item: self }
@@ -52,10 +73,11 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_replace
-    return unless source.is_a?(SlackChannel)
+    channel = source_channel
+    return unless channel
 
     broadcast_replace_to(
-      "workspace_#{source.workspace_id}_channel_#{source.channel_id}_action_items",
+      "workspace_#{channel.workspace_id}_channel_#{channel.channel_id}_action_items",
       target: dom_id(self),
       partial: "action_items/action_item",
       locals: { action_item: self }
@@ -63,7 +85,7 @@ class ActionItem < ApplicationRecord
   end
 
   def broadcast_dashboard_append
-    return unless source.is_a?(SlackChannel) && status.in?(DASHBOARD_STATUSES) && !archived?
+    return unless source_channel && status.in?(DASHBOARD_STATUSES) && !archived?
 
     broadcast_append_to(
       "dashboard_action_items",

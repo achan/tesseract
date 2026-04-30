@@ -37,12 +37,22 @@
     </div>
   </div>
 
-  <% if action_item.source_type == "Profile" || action_item.new_record? %>
+  <% if action_item.source_type == "Profile" || action_item.source.blank? %>
     <div class="mb-4">
       <%= f.label :source_id, "Profile", class: "block text-sm font-semibold mb-1" %>
       <%= f.hidden_field :source_type, value: "Profile" %>
       <%= f.collection_select :source_id, Profile.where(enabled: true).order(:name), :id, :name,
           {}, { required: true, class: "w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" } %>
+    </div>
+  <% elsif action_item.source_label.present? %>
+    <div class="mb-4">
+      <%= f.label :source_id, "Source", class: "block text-sm font-semibold mb-1" %>
+      <div class="w-full bg-secondary/60 border border-border rounded-md px-3 py-2 text-sm text-muted">
+        <%= action_item.source_label %>
+      </div>
+      <%= f.hidden_field :source_type %>
+      <%= f.hidden_field :source_id %>
+      <%= f.hidden_field :source_ts %>
     </div>
   <% end %>
 
