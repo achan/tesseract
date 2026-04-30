@@ -1,4 +1,8 @@
-<div id="<%= dom_id(event) %>" class="bg-card border border-border rounded-md px-4 py-3"
+<%
+  wrapper_id = local_assigns.fetch(:wrapper_id, dom_id(event))
+  show_actions = local_assigns.fetch(:show_actions, true)
+%>
+<div id="<%= wrapper_id %>" class="bg-card border border-border rounded-md px-4 py-3"
      data-controller="lightbox" data-action="keydown@window->lightbox#closeOnKey">
   <% channel = event.slack_channel %>
   <% workspace = channel.workspace %>
@@ -47,17 +51,31 @@
           <% end %>
         </div>
         <div class="ml-auto flex-shrink-0 flex items-center gap-2">
-          <button type="button" title="Reply"
-                  data-action="reply-modal#open"
-                  data-event-id="<%= event.id %>"
-                  data-author-name="<%= sender_profile[:name] %>"
-                  data-message-preview="<%= truncate(event.payload&.dig("text") || "", length: 120) %>"
-                  class="text-muted hover:text-foreground">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
-            </svg>
-          </button>
+          <% if show_actions %>
+            <button type="button" title="Create action item"
+                    data-action="action-item-modal#openNew"
+                    data-status="untriaged"
+                    data-source-type="SlackEvent"
+                    data-source-id="<%= event.id %>"
+                    data-source-ts="<%= event.ts %>"
+                    class="text-muted hover:text-foreground">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 5v14m7-7H5"/>
+              </svg>
+            </button>
+            <button type="button" title="Reply"
+                    data-action="reply-modal#open"
+                    data-event-id="<%= event.id %>"
+                    data-author-name="<%= sender_profile[:name] %>"
+                    data-message-preview="<%= truncate(event.payload&.dig("text") || "", length: 120) %>"
+                    class="text-muted hover:text-foreground">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+              </svg>
+            </button>
+          <% end %>
           <% if workspace.team_id.present? && event.ts.present? %>
             <a href="slack://channel?team=<%= workspace.team_id %>&id=<%= channel.channel_id %>&message=<%= event.ts.delete(".") %>"
                class="text-xs text-muted hover:text-foreground" title="Open in Slack">

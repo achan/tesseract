@@ -2,6 +2,7 @@ class SlackEvent < ApplicationRecord
   belongs_to :slack_channel
 
   has_many :feed_items, as: :source, dependent: :destroy
+  has_many :action_items, as: :source, dependent: :destroy
 
   validates :event_id, presence: true, uniqueness: true
 

@@ -8,6 +8,20 @@ class CleanupJobTest < ActiveSupport::TestCase
     assert SlackEvent.exists?(event_id: "Ev_MSG_001"), "Recent event should remain"
   end
 
+  test "keeps old events used as action item sources" do
+    event = slack_events(:old_event)
+    ActionItem.create!(
+      description: "Follow up on old event",
+      status: "untriaged",
+      priority: 3,
+      source: event
+    )
+
+    CleanupJob.perform_now
+
+    assert SlackEvent.exists?(event.id), "Sourced event should remain"
+  end
+
   test "does not delete summaries or action items" do
     old_summary = summaries(:old_summary)
     old_open = action_items(:old_untriaged_item)

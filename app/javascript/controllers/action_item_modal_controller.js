@@ -8,7 +8,18 @@ export default class extends Controller {
     event.stopPropagation()
 
     const status = event.currentTarget.dataset.status || "untriaged"
-    this.fetchAndShow(`/action_items/new?status=${status}`)
+    const params = new URLSearchParams({ status })
+
+    if (event.currentTarget.dataset.sourceType && event.currentTarget.dataset.sourceId) {
+      params.set("source_type", event.currentTarget.dataset.sourceType)
+      params.set("source_id", event.currentTarget.dataset.sourceId)
+    }
+
+    if (event.currentTarget.dataset.sourceTs) {
+      params.set("source_ts", event.currentTarget.dataset.sourceTs)
+    }
+
+    this.fetchAndShow(`/action_items/new?${params}`)
   }
 
   openEdit(event) {

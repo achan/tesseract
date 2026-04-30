@@ -13,7 +13,8 @@ class CleanupJob < ApplicationJob
     )
 
     cutoff = RETENTION_PERIOD.ago
-    events_deleted = SlackEvent.where("created_at < ?", cutoff).delete_all
+    referenced_event_ids = ActionItem.where(source_type: "SlackEvent").select(:source_id)
+    events_deleted = SlackEvent.where("created_at < ?", cutoff).where.not(id: referenced_event_ids).delete_all
     feed_items_deleted = FeedItem.where("occurred_at < ?", cutoff).delete_all
 
     wont_fix_archived = ActionItem.active
