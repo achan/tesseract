@@ -8,7 +8,7 @@ class SlackEvent < ApplicationRecord
   scope :in_window, ->(start_time, end_time) { where(created_at: start_time..end_time) }
   scope :messages, -> { where(event_type: "message").where("json_extract(payload, '$.subtype') IS NULL OR json_extract(payload, '$.subtype') != ?", "message_changed") }
 
-  after_create_commit :broadcast_event, :enqueue_action_items_job, :enqueue_create_feed_items
+  after_create_commit :broadcast_event, :enqueue_create_feed_items
 
   private
 
@@ -20,12 +20,6 @@ class SlackEvent < ApplicationRecord
       partial: "slack_events/event",
       locals: { event: self }
     )
-  end
-
-  def enqueue_action_items_job
-    return unless slack_channel.actionable?
-
-    GenerateActionItemsJob.set(wait: 90.seconds).perform_later(slack_event_id: id)
   end
 
   def enqueue_create_feed_items
