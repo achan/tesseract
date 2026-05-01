@@ -34,7 +34,7 @@ class GenerateActionItemsJob < ApplicationJob
     items = parsed["action_items"] || []
     items.each do |item|
       channel.action_items.create!(
-        description: item["description"],
+        description: item["description"].presence,
         assignee_user_id: item["assignee"],
         source_ts: item["source_ts"],
         priority: item["priority"] || 3,
@@ -138,7 +138,7 @@ class GenerateActionItemsJob < ApplicationJob
     lines << "## Output Format"
     lines << ""
     lines << "Return ONLY valid JSON (no markdown fences) with this structure:"
-    lines << '{ "action_items": [{ "description": "...", "assignee": "user_id or null", "source_ts": "...", "priority": 1-5 }] }'
+    lines << '{ "action_items": [{ "description": "... or null if the source message is self-explanatory", "assignee": "user_id or null", "source_ts": "...", "priority": 1-5 }] }'
     lines << "If there are no action items, return: { \"action_items\": [] }"
     lines << ""
 

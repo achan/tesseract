@@ -1,14 +1,32 @@
 require "test_helper"
 
 class ActionItemTest < ActiveSupport::TestCase
-  test "validates description presence" do
+  test "validates description presence when source is a profile" do
     item = ActionItem.new(
-      summary: summaries(:recent_summary),
-      source: slack_channels(:general),
-      status: "untriaged"
+      source: profiles(:one),
+      status: "untriaged",
+      priority: 3
     )
     assert_not item.valid?
     assert_includes item.errors[:description], "can't be blank"
+  end
+
+  test "allows blank description when source is a slack channel" do
+    item = ActionItem.new(
+      source: slack_channels(:general),
+      status: "untriaged",
+      priority: 3
+    )
+    assert item.valid?
+  end
+
+  test "allows blank description when source is a slack event" do
+    item = ActionItem.new(
+      source: slack_events(:message_one),
+      status: "untriaged",
+      priority: 3
+    )
+    assert item.valid?
   end
 
   test "validates status inclusion" do
@@ -53,12 +71,13 @@ class ActionItemTest < ActiveSupport::TestCase
     assert_not action_items(:untriaged_item).archived?
   end
 
-  test "source is optional for manually created items" do
+  test "requires description for manually created items" do
     item = ActionItem.new(
-      description: "Manual task",
+      source: profiles(:one),
       status: "todo",
       priority: 3
     )
-    assert item.valid?
+    assert_not item.valid?
+    assert_includes item.errors[:description], "can't be blank"
   end
 end

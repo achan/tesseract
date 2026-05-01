@@ -46,14 +46,16 @@
       <% end %>
     </div>
   </div>
-  <div data-controller="expandable" class="mb-1">
-    <p class="text-sm max-h-16 overflow-hidden" data-expandable-target="content"><%= action_item.description %></p>
-    <button class="text-xs text-primary hover:underline mt-1"
-            data-expandable-target="toggle"
-            data-action="expandable#toggle">
-      Show more
-    </button>
-  </div>
+  <% if action_item.description.present? %>
+    <div data-controller="expandable" class="mb-1">
+      <p class="text-sm max-h-16 overflow-hidden" data-expandable-target="content"><%= action_item.description %></p>
+      <button class="text-xs text-primary hover:underline mt-1"
+              data-expandable-target="toggle"
+              data-action="expandable#toggle">
+        Show more
+      </button>
+    </div>
+  <% end %>
   <% if action_item.source.is_a?(SlackEvent) %>
     <div class="mt-2 mb-3">
       <%= render "dashboard/event",

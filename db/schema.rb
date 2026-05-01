@@ -10,12 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_28_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_01_000001) do
   create_table "action_items", force: :cascade do |t|
     t.integer "summary_id"
     t.text "source_type", null: false
     t.integer "source_id", null: false
-    t.text "description", null: false
+    t.text "description"
     t.text "assignee_user_id"
     t.text "source_ts"
     t.text "status", default: "untriaged", null: false
