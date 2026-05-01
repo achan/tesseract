@@ -6,7 +6,7 @@ class ActionItem < ApplicationRecord
   belongs_to :summary, optional: true
   belongs_to :source, polymorphic: true
 
-  validates :description, presence: true
+  validates :description, presence: true, unless: :has_source?
   validates :status, presence: true, inclusion: { in: STATUSES }
   validates :priority, inclusion: { in: 1..5 }
 
@@ -33,6 +33,10 @@ class ActionItem < ApplicationRecord
 
   def archived?
     archived_at.present?
+  end
+
+  def has_source?
+    source_type.present? && source_type != "Profile"
   end
 
   def source_channel
