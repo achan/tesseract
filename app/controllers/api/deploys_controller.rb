@@ -26,7 +26,7 @@ module Api
       DeployTimeoutJob.set(wait: 2.minutes).perform_later(commit_sha)
 
       deploy_log = Rails.root.join("log/deploy.log")
-      pid = Process.spawn("bin/deploy", chdir: Rails.root.to_s, out: deploy_log.to_s, err: deploy_log.to_s)
+      pid = Process.spawn("bin/deploy", commit_sha, chdir: Rails.root.to_s, out: deploy_log.to_s, err: deploy_log.to_s)
       Process.detach(pid)
 
       head :accepted
