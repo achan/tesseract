@@ -24,8 +24,7 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # SSL is handled by cloudflared at the edge. Don't force SSL at the
-  # app level so direct HTTP access (e.g. localhost) still works.
+  # TLS is terminated directly by Puma for the standard tars host-and-port URL.
   # config.assume_ssl = true
   # config.force_ssl = true
 
@@ -78,9 +77,9 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Allow Action Cable connections from the tunnel and localhost
+  # Allow Action Cable connections from the production tars URL and localhost.
   config.action_cable.allowed_request_origins = [
-    "https://achanbot-1.docovia.com",
+    "https://tesseract-web.tars.achan.bot:6100",
     /http:\/\/localhost.*/
   ]
 

@@ -9,8 +9,11 @@ WorkingDirectory=/home/bot/repos/tesseract-web
 Environment=HOME=/home/bot
 Environment=RAILS_ENV=production
 Environment=SOLID_QUEUE_IN_PUMA=1
-Environment=PORT=6001
-Environment=BIND=tcp://127.0.0.1:6001
+Environment=PORT=6100
+Environment=TESSERACT_DOMAIN=tesseract-web.tars.achan.bot
+Environment=CERT_PATH=/home/bot/.local/share/tesseract/certs/tesseract-web.tars.achan.bot.crt
+Environment=KEY_PATH=/home/bot/.local/share/tesseract/certs/tesseract-web.tars.achan.bot.key
+Environment="BIND=ssl://0.0.0.0:6100?key=/home/bot/.local/share/tesseract/certs/tesseract-web.tars.achan.bot.key&cert=/home/bot/.local/share/tesseract/certs/tesseract-web.tars.achan.bot.crt"
 Environment=PATH=/home/bot/.local/bin:/usr/local/bin:/usr/bin
 ExecStart=/usr/bin/mise exec ruby@3.4.2 -- ./bin/prod
 Restart=on-failure

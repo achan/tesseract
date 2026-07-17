@@ -15,7 +15,7 @@ if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
   kill "$(cat "$PIDFILE")"
 else
   # No pidfile or stale pid — fall back to killing whatever is on the port
-  PORT="${PORT:-6001}"
+  PORT="${PORT:-6100}"
   if command -v lsof >/dev/null 2>&1; then
     PIDS=$(lsof -ti:"$PORT" 2>/dev/null || true)
   else

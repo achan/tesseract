@@ -5,9 +5,12 @@ main() {
 
   export RAILS_ENV=production
   export SOLID_QUEUE_IN_PUMA=1
-  export PORT="${PORT:-6001}"
+  export PORT="${PORT:-6100}"
   export PIDFILE="tmp/pids/server.pid"
-  export BIND="${BIND:-tcp://127.0.0.1:${PORT}}"
+  export TESSERACT_DOMAIN="${TESSERACT_DOMAIN:-tesseract-web.tars.achan.bot}"
+  export CERT_PATH="${CERT_PATH:-$HOME/.local/share/tesseract/certs/${TESSERACT_DOMAIN}.crt}"
+  export KEY_PATH="${KEY_PATH:-$HOME/.local/share/tesseract/certs/${TESSERACT_DOMAIN}.key}"
+  export BIND="${BIND:-ssl://0.0.0.0:${PORT}?key=${KEY_PATH}&cert=${CERT_PATH}}"
 
   bin/rails assets:precompile
   bin/rails db:prepare

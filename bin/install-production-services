@@ -12,11 +12,7 @@ fi
 
 mkdir -p "$TARGET_DIR" "$HOME/.config/tesseract"
 install -m 0644 "$SOURCE_DIR/tesseract-web-production.service" "$TARGET_DIR/tesseract-web-production.service"
-install -m 0644 "$SOURCE_DIR/tesseract-web-tunnel.service" "$TARGET_DIR/tesseract-web-tunnel.service"
 systemctl --user daemon-reload
 
 echo "installed=tesseract-web-production.service"
-echo "installed=tesseract-web-tunnel.service"
-echo "tunnel_config=$HOME/.config/tesseract/tesseract-web-tunnel.yml"
-echo "tunnel credentials must be readable only by the current user"
 echo "services remain disabled and stopped"
