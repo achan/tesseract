@@ -1,0 +1,374 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ID="tesseract-web"
+WORKTREE_ROOT="${TESSERACT_WORKTREE_ROOT:-$HOME/repos/tesseract-web-worktrees}"
+DOMAIN="${TESSERACT_DOMAIN:-tesseract-web.tars.achan.bot}"
+PORT_START="${TESSERACT_PORT_START:-6101}"
+PORT_END="${TESSERACT_PORT_END:-6199}"
+CERT_PATH="${TESSERACT_CERT_PATH:-$HOME/.local/share/tesseract/certs/tesseract-web.tars.achan.bot.crt}"
+KEY_PATH="${TESSERACT_KEY_PATH:-$HOME/.local/share/tesseract/certs/tesseract-web.tars.achan.bot.key}"
+
+usage() {
+  cat >&2 <<USAGE
+Usage:
+  bin/tesseract worktree create <slug> [branch]
+  bin/tesseract worktree start <slug>
+  bin/tesseract worktree stop <slug>
+  bin/tesseract worktree status <slug>
+  bin/tesseract worktree remove <slug> [--force]
+USAGE
+  exit 1
+}
+
+validate_slug() {
+  case "$1" in
+    ""|*[!A-Za-z0-9._-]*)
+      echo "invalid worktree slug: $1" >&2
+      exit 1
+      ;;
+  esac
+}
+
+sanitize_slug() {
+  printf "%s" "$1" | tr '-' '_' | tr -cd '[:alnum:]_'
+}
+
+main_dir() {
+  git worktree list --porcelain | awk '/^worktree / { print substr($0, 10); exit }'
+}
+
+worktree_path() {
+  printf "%s/%s" "$WORKTREE_ROOT" "$1"
+}
+
+session_name() {
+  printf "tesseract_web_%s" "$(sanitize_slug "$1")"
+}
+
+runtime_spec() {
+  if [ -f .ruby-version ]; then
+    printf "ruby@%s" "$(cat .ruby-version)"
+  fi
+}
+
+run_runtime() {
+  spec=$(runtime_spec)
+  if [ -n "$spec" ] && command -v mise >/dev/null 2>&1; then
+    mise exec "$spec" -- "$@"
+  else
+    "$@"
+  fi
+}
+
+runtime_prefix() {
+  spec=$(runtime_spec)
+  if [ -n "$spec" ] && command -v mise >/dev/null 2>&1; then
+    printf "mise exec %s -- " "$spec"
+  fi
+}
+
+allocated_ports() {
+  [ -d "$WORKTREE_ROOT" ] || return 0
+  find "$WORKTREE_ROOT" -maxdepth 2 -name .env.development.local -print 2>/dev/null |
+    while IFS= read -r env_file; do
+      sed -n 's/^PORT=//p' "$env_file" | head -1 | tr -d '"' | tr -d "'"
+    done
+}
+
+port_is_listening() {
+  port="$1"
+  if ! command -v ss >/dev/null 2>&1; then
+    echo "ss is required to allocate tesseract-web worktree ports" >&2
+    exit 1
+  fi
+  ss -ltnH "sport = :$port" 2>/dev/null | grep -q .
+}
+
+choose_port() {
+  candidate="$PORT_START"
+  while [ "$candidate" -le "$PORT_END" ]; do
+    if allocated_ports | grep -qx "$candidate"; then
+      candidate=$((candidate + 1))
+      continue
+    fi
+    if port_is_listening "$candidate"; then
+      candidate=$((candidate + 1))
+      continue
+    fi
+    printf "%s" "$candidate"
+    return
+  done
+  echo "no available port in ${PORT_START}..${PORT_END}" >&2
+  exit 1
+}
+
+ensure_main_checkout() {
+  root=$(git rev-parse --show-toplevel)
+  main=$(main_dir)
+  if [ "$root" != "$main" ]; then
+    echo "run from main checkout: $main" >&2
+    exit 1
+  fi
+}
+
+resolve_branch() {
+  branch=${1#origin/}
+  git fetch --prune origin >/dev/null 2>&1 || true
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    printf "%s" "$branch"
+    return
+  fi
+  if git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    git branch --track "$branch" "origin/$branch" >/dev/null
+  fi
+  printf "%s" "$branch"
+}
+
+write_runtime_env() {
+  port="$1"
+  cat > .env.development.local <<EOF
+PORT=${port}
+ALLOWED_HOSTS=${DOMAIN}
+EOF
+  chmod 0600 .env.development.local
+}
+
+link_shared_runtime_files() {
+  main=$(main_dir)
+  mkdir -p config
+  [ -e .env ] || [ ! -f "$main/.env" ] || ln -s "$main/.env" .env
+  [ -e .env.local ] || [ ! -f "$main/.env.local" ] || ln -s "$main/.env.local" .env.local
+  [ -e config/master.key ] || [ ! -f "$main/config/master.key" ] || ln -s "$main/config/master.key" config/master.key
+}
+
+prepare_databases() {
+  main=$(main_dir)
+  prod_db="$main/storage/production.sqlite3"
+  if [ ! -f "$prod_db" ]; then
+    echo "production database is missing: $prod_db" >&2
+    exit 1
+  fi
+  if ! command -v sqlite3 >/dev/null 2>&1; then
+    echo "sqlite3 is required to prepare tesseract-web worktrees" >&2
+    exit 1
+  fi
+
+  mkdir -p storage
+  dev_db="$PWD/storage/development.sqlite3"
+  sqlite3 "$prod_db" ".timeout 30000" ".backup '$dev_db'"
+  run_runtime bin/rails db:prepare
+}
+
+ensure_certificate() {
+  if [ ! -r "$CERT_PATH" ] || [ ! -r "$KEY_PATH" ]; then
+    echo "missing tesseract-web certificate files:" >&2
+    echo "  cert: $CERT_PATH" >&2
+    echo "  key:  $KEY_PATH" >&2
+    echo "run: bin/tesseract cert issue tesseract-web --host tars" >&2
+    exit 1
+  fi
+}
+
+port_for_slug() {
+  env_file="$(worktree_path "$1")/.env.development.local"
+  if [ ! -f "$env_file" ]; then
+    echo "missing .env.development.local for $1" >&2
+    exit 1
+  fi
+  port=$(sed -n 's/^PORT=//p' "$env_file" | head -1 | tr -d '"' | tr -d "'")
+  case "$port" in
+    ""|*[!0-9]*)
+      echo "invalid PORT in $env_file" >&2
+      exit 1
+      ;;
+  esac
+  printf "%s" "$port"
+}
+
+create_worktree() {
+  slug="${1:-}"
+  [ -n "$slug" ] || usage
+  validate_slug "$slug"
+  branch="${2:-feature/$slug}"
+  path=$(worktree_path "$slug")
+
+  ensure_main_checkout
+  mkdir -p "$WORKTREE_ROOT"
+  if [ -d "$path" ]; then
+    echo "worktree already exists: $path"
+    return
+  fi
+
+  port=$(choose_port)
+  branch=$(resolve_branch "$branch")
+  git check-ref-format --branch "$branch" >/dev/null
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git worktree add "$path" "$branch"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    git worktree add --track -b "$branch" "$path" "origin/$branch"
+  elif git show-ref --verify --quiet refs/remotes/origin/main; then
+    git worktree add --no-track -b "$branch" "$path" origin/main
+  else
+    git worktree add --no-track -b "$branch" "$path" main
+  fi
+
+  cd "$path"
+  link_shared_runtime_files
+  write_runtime_env "$port"
+  run_runtime bundle check || run_runtime bundle install
+  prepare_databases
+
+  echo "created ${APP_ID}/${slug} branch=${branch} port=${port} path=${path}"
+  echo "url=https://${DOMAIN}:${port}"
+}
+
+start_worktree() {
+  slug="${1:-}"
+  [ -n "$slug" ] || usage
+  validate_slug "$slug"
+  path=$(worktree_path "$slug")
+  if [ ! -d "$path" ] || ! git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "worktree is missing: $path" >&2
+    exit 1
+  fi
+
+  session=$(session_name "$slug")
+  port=$(port_for_slug "$slug")
+  url="https://${DOMAIN}:${port}"
+  if tmux has-session -t "=$session" 2>/dev/null; then
+    echo "session already running: $session"
+    echo "path=$path"
+    echo "tmux_session=$session"
+    echo "url=$url"
+    return
+  fi
+
+  cd "$path"
+  ensure_certificate
+  run_runtime bundle check
+  prefix=$(runtime_prefix)
+  web_command="PORT=$port ALLOWED_HOSTS=$DOMAIN ${prefix}bin/rails server -p $port -b \"ssl://0.0.0.0?key=$KEY_PATH&cert=$CERT_PATH\""
+  jobs_command="${prefix}bin/jobs"
+  css_command="${prefix}bin/rails tailwindcss:watch"
+
+  tmux new-session -d -s "$session" -n main -c "$path"
+  tmux send-keys -t "$session":main "pwd" C-m
+  tmux split-window -h -t "$session":main -c "$path"
+  tmux send-keys -t "$session":main.1 "codex --yolo" C-m
+  tmux new-window -t "$session" -n services -c "$path"
+  tmux set-window-option -t "$session":services remain-on-exit on
+  tmux send-keys -t "$session":services "$web_command" C-m
+  tmux split-window -v -t "$session":services -c "$path"
+  tmux send-keys -t "$session":services.1 "$jobs_command" C-m
+  tmux split-window -v -t "$session":services.1 -c "$path"
+  tmux send-keys -t "$session":services.2 "$css_command" C-m
+  tmux select-window -t "$session":main
+
+  echo "started $session"
+  echo "path=$path"
+  echo "tmux_session=$session"
+  echo "url=$url"
+}
+
+stop_worktree() {
+  slug="${1:-}"
+  [ -n "$slug" ] || usage
+  validate_slug "$slug"
+  session=$(session_name "$slug")
+  if tmux has-session -t "=$session" 2>/dev/null; then
+    tmux kill-session -t "=$session"
+    echo "stopped $session"
+  else
+    echo "not running: $session"
+  fi
+}
+
+status_worktree() {
+  slug="${1:-}"
+  [ -n "$slug" ] || usage
+  validate_slug "$slug"
+  path=$(worktree_path "$slug")
+  session=$(session_name "$slug")
+  echo "app=$APP_ID"
+  echo "slug=$slug"
+  echo "path=$path"
+  if [ -d "$path" ] && git -C "$path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "registered=yes"
+    echo "branch=$(git -C "$path" branch --show-current)"
+    port=$(port_for_slug "$slug")
+    echo "port=$port"
+    echo "url=https://${DOMAIN}:${port}"
+  else
+    echo "registered=no"
+    echo "url=-"
+  fi
+  if tmux has-session -t "=$session" 2>/dev/null; then
+    echo "running=yes"
+  else
+    echo "running=no"
+  fi
+  echo "tmux_session=$session"
+}
+
+remove_worktree() {
+  slug="${1:-}"
+  [ -n "$slug" ] || usage
+  validate_slug "$slug"
+  force=false
+  [ "${2:-}" = "--force" ] && force=true
+  path=$(worktree_path "$slug")
+  session=$(session_name "$slug")
+  main=$(main_dir)
+
+  if tmux has-session -t "=$session" 2>/dev/null; then
+    tmux kill-session -t "=$session"
+    echo "stopped $session"
+  fi
+  if [ ! -d "$path" ]; then
+    echo "worktree is missing: $path"
+    git -C "$main" worktree prune
+    return
+  fi
+  if [ -n "$(git -C "$path" status --porcelain)" ] && [ "$force" != true ]; then
+    echo "worktree has uncommitted changes; rerun with --force" >&2
+    git -C "$path" status --short >&2
+    exit 1
+  fi
+  if [ "$force" = true ]; then
+    git -C "$main" worktree remove --force "$path"
+  else
+    git -C "$main" worktree remove "$path"
+  fi
+  git -C "$main" worktree prune
+  echo "removed ${APP_ID}/${slug} path=${path}"
+}
+
+[ "${1:-}" = "worktree" ] || usage
+action="${2:-}"
+shift 2 || usage
+
+case "$action" in
+  create)
+    [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage
+    create_worktree "$@"
+    ;;
+  start)
+    [ "$#" -eq 1 ] || usage
+    start_worktree "$1"
+    ;;
+  stop)
+    [ "$#" -eq 1 ] || usage
+    stop_worktree "$1"
+    ;;
+  status)
+    [ "$#" -eq 1 ] || usage
+    status_worktree "$1"
+    ;;
+  remove)
+    [ "$#" -ge 1 ] && [ "$#" -le 2 ] || usage
+    [ "$#" -eq 1 ] || [ "$2" = "--force" ] || usage
+    remove_worktree "$@"
+    ;;
+  *) usage ;;
+esac

@@ -1,0 +1,23 @@
+[Unit]
+Description=Tesseract Web production Rails server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/bot/repos/tesseract-web
+Environment=HOME=/home/bot
+Environment=RAILS_ENV=production
+Environment=SOLID_QUEUE_IN_PUMA=1
+Environment=PORT=6001
+Environment=BIND=tcp://127.0.0.1:6001
+Environment=PATH=/home/bot/.local/bin:/usr/local/bin:/usr/bin
+ExecStart=/usr/bin/mise exec ruby@3.4.2 -- ./bin/prod
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=60s
+KillSignal=SIGTERM
+UMask=0027
+
+[Install]
+WantedBy=default.target

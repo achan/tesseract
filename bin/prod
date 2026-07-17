@@ -1,70 +1,17 @@
 #!/usr/bin/env bash
 
-# Wrap in main() so bash reads the entire script before executing.
-# This prevents issues if bin/deploy updates this file mid-execution.
 main() {
-  set -e
+  set -euo pipefail
 
   export RAILS_ENV=production
   export SOLID_QUEUE_IN_PUMA=1
   export PORT="${PORT:-6001}"
   export PIDFILE="tmp/pids/server.pid"
-
-  # Read tunnel ID from .worktreerc
-  CLOUDFLARE_TUNNEL_ID=$(grep "^CLOUDFLARE_TUNNEL_ID=" .worktreerc | cut -d'=' -f2)
+  export BIND="${BIND:-tcp://127.0.0.1:${PORT}}"
 
   bin/rails assets:precompile
   bin/rails db:prepare
-
-  # Start cloudflared tunnel in the background
-  if [ -n "$CLOUDFLARE_TUNNEL_ID" ]; then
-    CLOUDFLARE_TOKEN=$(cloudflared tunnel token "$CLOUDFLARE_TUNNEL_ID")
-    cloudflared tunnel --loglevel debug --logfile cloudflared.log run --token "$CLOUDFLARE_TOKEN" &
-    TUNNEL_PID=$!
-    echo "Started cloudflared tunnel (PID: $TUNNEL_PID)"
-  else
-    echo "Warning: No CLOUDFLARE_TUNNEL_ID found in .worktreerc, skipping tunnel"
-  fi
-
-  # Write bin/prod's PID so bin/deploy can signal us
-  echo $$ > tmp/pids/prod.pid
-
-  SHOULD_RESTART=true
-  SERVER_PID=""
-
-  cleanup() {
-    SHOULD_RESTART=false
-    [ -n "$SERVER_PID" ] && kill "$SERVER_PID" 2>/dev/null || true
-    [ -n "$TUNNEL_PID" ] && kill "$TUNNEL_PID" 2>/dev/null || true
-    rm -f tmp/pids/prod.pid
-    wait 2>/dev/null
-    exit 0
-  }
-  trap cleanup INT TERM EXIT
-
-  # SIGUSR1 from bin/deploy: kill the server so the loop restarts it
-  handle_restart() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Deploy requested restart (SIGUSR1)..."
-    [ -n "$SERVER_PID" ] && kill -TERM "$SERVER_PID" 2>/dev/null || true
-  }
-  trap handle_restart USR1
-
-  while $SHOULD_RESTART; do
-    bin/rails server &
-    SERVER_PID=$!
-
-    # `wait` returns immediately when interrupted by a trapped signal,
-    # so loop until the server process is actually gone.
-    while kill -0 "$SERVER_PID" 2>/dev/null; do
-      wait "$SERVER_PID" 2>/dev/null || true
-    done
-    SERVER_PID=""
-
-    if $SHOULD_RESTART; then
-      echo "$(date '+%Y-%m-%d %H:%M:%S') Restarting server..."
-      sleep 1
-    fi
-  done
+  exec bin/rails server
 }
 
 main "$@"

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+SOURCE_DIR="$ROOT/config/systemd/user"
+TARGET_DIR="$HOME/.config/systemd/user"
+
+if ! command -v systemctl >/dev/null 2>&1; then
+  echo "systemd is required to install production services" >&2
+  exit 1
+fi
+
+mkdir -p "$TARGET_DIR" "$HOME/.config/tesseract"
+install -m 0644 "$SOURCE_DIR/tesseract-web-production.service" "$TARGET_DIR/tesseract-web-production.service"
+install -m 0644 "$SOURCE_DIR/tesseract-web-tunnel.service" "$TARGET_DIR/tesseract-web-tunnel.service"
+systemctl --user daemon-reload
+
+echo "installed=tesseract-web-production.service"
+echo "installed=tesseract-web-tunnel.service"
+echo "token_file=$HOME/.config/tesseract/tesseract-web-tunnel.token"
+echo "services remain disabled and stopped"

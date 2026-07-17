@@ -6,9 +6,18 @@ cd "$(dirname "$0")/.."
 LOCK_DIR="tmp/deploy.lock"
 LOCK_TIMEOUT=300 # 5 minutes
 
+runtime() {
+  if command -v mise >/dev/null 2>&1 && [ -f .ruby-version ]; then
+    mise exec "ruby@$(cat .ruby-version)" -- "$@"
+  else
+    "$@"
+  fi
+}
+
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   if [ -d "$LOCK_DIR" ]; then
-    lock_age=$(( $(date +%s) - $(stat -f %m "$LOCK_DIR") ))
+    lock_mtime=$(ruby -e 'puts File.mtime(ARGV.fetch(0)).to_i' "$LOCK_DIR")
+    lock_age=$(( $(date +%s) - lock_mtime ))
     if [ "$lock_age" -gt "$LOCK_TIMEOUT" ]; then
       echo "$(date '+%Y-%m-%d %H:%M:%S') Removing stale deploy lock (${lock_age}s old)"
       rmdir "$LOCK_DIR" 2>/dev/null || true
@@ -24,29 +33,18 @@ trap 'rmdir "$LOCK_DIR" 2>/dev/null' EXIT
 echo "$(date '+%Y-%m-%d %H:%M:%S') Starting deploy..."
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Pulling latest code..."
-git pull origin main
+git pull --ff-only origin main
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Installing dependencies..."
-bundle install --jobs 4
+runtime bundle install --jobs 4
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Precompiling assets..."
-RAILS_ENV=production bin/rails assets:precompile
+RAILS_ENV=production runtime bin/rails assets:precompile
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Running migrations..."
-RAILS_ENV=production bin/rails db:migrate
+RAILS_ENV=production runtime bin/rails db:prepare
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') Requesting server restart..."
-PROD_PIDFILE="tmp/pids/prod.pid"
-if [ -f "$PROD_PIDFILE" ]; then
-  PROD_PID=$(cat "$PROD_PIDFILE")
-  if kill -0 "$PROD_PID" 2>/dev/null; then
-    kill -USR1 "$PROD_PID"
-    echo "$(date '+%Y-%m-%d %H:%M:%S') Sent SIGUSR1 to bin/prod (PID $PROD_PID)"
-  else
-    echo "$(date '+%Y-%m-%d %H:%M:%S') bin/prod PID $PROD_PID not running"
-  fi
-else
-  echo "$(date '+%Y-%m-%d %H:%M:%S') No prod.pid found, cannot signal restart"
-fi
+echo "$(date '+%Y-%m-%d %H:%M:%S') Requesting Puma restart..."
+RAILS_ENV=production runtime bin/rails restart
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Deploy complete."

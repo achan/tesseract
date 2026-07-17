@@ -124,17 +124,38 @@ bin/remove-worktree.sh my-feature
 
 ## Production
 
+On tars, production runs as two systemd user services: Rails/Solid Queue and a
+separate Cloudflare Tunnel. Install the unit files without starting them:
+
+```sh
+bin/install-production-services
+```
+
+Store the rotated Cloudflare connector token at
+`~/.config/tesseract/tesseract-web-tunnel.token` with mode `0600`. Start Rails
+first, verify `http://127.0.0.1:6001/up`, and only then start the tunnel:
+
+```sh
+systemctl --user start tesseract-web-production.service
+curl --fail http://127.0.0.1:6001/up
+systemctl --user start tesseract-web-tunnel.service
+```
+
+Use `systemctl --user status` and `journalctl --user-unit` for status and logs.
+The legacy `bin/prod` entrypoint now owns only Rails; systemd owns process
+restarts and cloudflared runs independently.
+
 ### Starting the server
 
-`bin/prod` runs the Rails server in production mode with Solid Queue
-embedded in puma. It reads `CLOUDFLARE_TUNNEL_ID` from `.worktreerc`
-to start a cloudflared tunnel automatically.
+`bin/prod` runs the Rails server in production mode with Solid Queue embedded
+in Puma. It binds to `127.0.0.1:6001` by default and leaves public ingress to
+the separately supervised tunnel service.
 
 ```sh
 bin/prod
 ```
 
-The server listens on port 6001 by default (override with `PORT`).
+Override the listener with `PORT` and `BIND` when needed.
 
 ### Auto-deploy
 

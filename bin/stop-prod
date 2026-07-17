@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -e
+
+if command -v systemctl >/dev/null 2>&1 && systemctl --user cat tesseract-web-production.service >/dev/null 2>&1; then
+  systemctl --user stop tesseract-web-tunnel.service tesseract-web-production.service
+  echo "Stopped tesseract-web systemd services."
+  exit 0
+fi
+
+PIDFILE="tmp/pids/server.pid"
+
+if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+  echo "Stopping production server (PID: $(cat "$PIDFILE"))..."
+  kill "$(cat "$PIDFILE")"
+else
+  # No pidfile or stale pid — fall back to killing whatever is on the port
+  PORT="${PORT:-6001}"
+  if command -v lsof >/dev/null 2>&1; then
+    PIDS=$(lsof -ti:"$PORT" 2>/dev/null || true)
+  else
+    PIDS=""
+  fi
+
+  if [ -z "$PIDS" ]; then
+    echo "Nothing running on port $PORT"
+    exit 0
+  fi
+
+  echo "No prod pidfile found, killing processes on port $PORT..."
+  echo "$PIDS" | xargs kill
+fi
+
+echo "Stopped."
