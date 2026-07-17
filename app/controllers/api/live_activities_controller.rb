@@ -1,5 +1,7 @@
 module Api
   class LiveActivitiesController < ApplicationController
+    CODEX_STALE_AFTER = 15.minutes
+
     skip_before_action :verify_authenticity_token
     skip_before_action :authenticate
     skip_forgery_protection
@@ -21,6 +23,7 @@ module Api
         ends_at: nil
       )
       activity.save!
+      schedule_stale_cleanup(activity)
       render json: activity, status: :ok
     end
 
@@ -34,6 +37,7 @@ module Api
         activity.metadata = activity.metadata.merge(params[:metadata].to_unsafe_h)
       end
       activity.save!
+      schedule_stale_cleanup(activity)
       render json: activity, status: :ok
     end
 
@@ -45,6 +49,16 @@ module Api
       activity.update!(status: "ending", ends_at: 10.seconds.from_now)
       LiveActivityCleanupJob.set(wait: 10.seconds).perform_later(activity.id)
       render json: activity, status: :ok
+    end
+
+    private
+
+    def schedule_stale_cleanup(activity)
+      return unless activity.activity_type == "codex"
+
+      LiveActivityCleanupJob
+        .set(wait: CODEX_STALE_AFTER)
+        .perform_later(activity.id, stale_before: activity.updated_at)
     end
   end
 end
