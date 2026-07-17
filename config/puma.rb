@@ -27,8 +27,9 @@
 threads_count = ENV.fetch("RAILS_MAX_THREADS", 3)
 threads threads_count, threads_count
 
-# Bind to an explicit URI in production so cloudflared is the only public
-# ingress. Development keeps the conventional all-interface port behavior.
+# Bind to an explicit URI when requested. Production passes its direct TLS
+# listener explicitly to `bin/rails server`; development keeps the conventional
+# all-interface port behavior.
 if ENV["BIND"].to_s.empty?
   port ENV.fetch("PORT", 3000)
 else

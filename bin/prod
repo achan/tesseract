@@ -14,7 +14,7 @@ main() {
 
   bin/rails assets:precompile
   bin/rails db:prepare
-  exec bin/rails server
+  exec bin/rails server -b "$BIND"
 }
 
 main "$@"
