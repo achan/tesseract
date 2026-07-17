@@ -131,9 +131,10 @@ separate Cloudflare Tunnel. Install the unit files without starting them:
 bin/install-production-services
 ```
 
-Store the rotated Cloudflare connector token at
-`~/.config/tesseract/tesseract-web-tunnel.token` with mode `0600`. Start Rails
-first, verify `http://127.0.0.1:6001/up`, and only then start the tunnel:
+Store the dedicated tunnel credentials under `~/.config/tesseract/` with mode
+`0600`, and point `tesseract-web-tunnel.yml` at that credential file and the
+loopback Rails origin. Start Rails first, verify `http://127.0.0.1:6001/up`,
+and only then start the tunnel:
 
 ```sh
 systemctl --user start tesseract-web-production.service

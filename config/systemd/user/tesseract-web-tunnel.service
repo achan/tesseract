@@ -3,11 +3,12 @@ Description=Tesseract Web Cloudflare Tunnel
 Wants=network-online.target
 Requires=tesseract-web-production.service
 After=network-online.target tesseract-web-production.service
+ConditionPathExists=/home/bot/.config/tesseract/tesseract-web-tunnel.yml
 
 [Service]
 Type=simple
 Environment=HOME=/home/bot
-ExecStart=/home/bot/.local/bin/cloudflared --no-autoupdate tunnel run --token-file /home/bot/.config/tesseract/tesseract-web-tunnel.token
+ExecStart=/home/bot/.local/bin/cloudflared --no-autoupdate tunnel --config /home/bot/.config/tesseract/tesseract-web-tunnel.yml run
 Restart=on-failure
 RestartSec=5s
 TimeoutStopSec=30s

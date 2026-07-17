@@ -17,5 +17,6 @@ systemctl --user daemon-reload
 
 echo "installed=tesseract-web-production.service"
 echo "installed=tesseract-web-tunnel.service"
-echo "token_file=$HOME/.config/tesseract/tesseract-web-tunnel.token"
+echo "tunnel_config=$HOME/.config/tesseract/tesseract-web-tunnel.yml"
+echo "tunnel credentials must be readable only by the current user"
 echo "services remain disabled and stopped"

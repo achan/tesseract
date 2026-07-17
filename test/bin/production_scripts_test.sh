@@ -16,10 +16,10 @@ if grep -q 'cloudflared' "$ROOT/bin/prod"; then
 fi
 
 grep -q 'BIND=tcp://127.0.0.1:6001' "$ROOT/config/systemd/user/tesseract-web-production.service"
-grep -q -- '--token-file /home/bot/.config/tesseract/tesseract-web-tunnel.token' \
+grep -q -- '--config /home/bot/.config/tesseract/tesseract-web-tunnel.yml' \
   "$ROOT/config/systemd/user/tesseract-web-tunnel.service"
-if grep -q -- '--token ' "$ROOT/config/systemd/user/tesseract-web-tunnel.service"; then
-  echo "tunnel token must not appear in process arguments" >&2
+if grep -Eq -- '--token(-file)? ' "$ROOT/config/systemd/user/tesseract-web-tunnel.service"; then
+  echo "tunnel credentials must not appear in process arguments" >&2
   exit 1
 fi
 
