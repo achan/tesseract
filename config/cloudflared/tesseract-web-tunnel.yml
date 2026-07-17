@@ -14,4 +14,10 @@ ingress:
     originRequest:
       originServerName: tesseract-web.tars.achan.bot
 
+  - hostname: tesseract-hooks.achan.bot
+    path: ^/api/live_activities(?:/(?:start|progress|stop))?$
+    service: https://127.0.0.1:6100
+    originRequest:
+      originServerName: tesseract-web.tars.achan.bot
+
   - service: http_status:404
