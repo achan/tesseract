@@ -17,8 +17,12 @@ fi
 
 grep -q 'PORT=6100' "$ROOT/config/systemd/user/tesseract-web-production.service"
 grep -q 'BIND=ssl://0.0.0.0:6100' "$ROOT/config/systemd/user/tesseract-web-production.service"
+grep -q 'install -m 0600' "$ROOT/bin/install-production-services"
 grep -q -- '--config /home/bot/.config/tesseract/tesseract-web-tunnel.yml' \
   "$ROOT/config/systemd/user/tesseract-web-tunnel.service"
+grep -q 'hostname: tesseract-hooks.achan.bot' "$ROOT/config/cloudflared/tesseract-web-tunnel.yml"
+grep -Fq 'path: ^/api/slack/events$' "$ROOT/config/cloudflared/tesseract-web-tunnel.yml"
+grep -Fq 'path: ^/api/deploy$' "$ROOT/config/cloudflared/tesseract-web-tunnel.yml"
 if grep -Eq -- '--token(-file)? ' "$ROOT/config/systemd/user/tesseract-web-tunnel.service"; then
   echo "tunnel credentials must not appear in process arguments" >&2
   exit 1

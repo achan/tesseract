@@ -3,16 +3,22 @@ set -euo pipefail
 
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 SOURCE_DIR="$ROOT/config/systemd/user"
+TUNNEL_CONFIG="$ROOT/config/cloudflared/tesseract-web-tunnel.yml"
 TARGET_DIR="$HOME/.config/systemd/user"
+TESSERACT_CONFIG_DIR="$HOME/.config/tesseract"
 
 if ! command -v systemctl >/dev/null 2>&1; then
   echo "systemd is required to install production services" >&2
   exit 1
 fi
 
-mkdir -p "$TARGET_DIR" "$HOME/.config/tesseract"
+mkdir -p "$TARGET_DIR" "$TESSERACT_CONFIG_DIR"
 install -m 0644 "$SOURCE_DIR/tesseract-web-production.service" "$TARGET_DIR/tesseract-web-production.service"
+install -m 0644 "$SOURCE_DIR/tesseract-web-tunnel.service" "$TARGET_DIR/tesseract-web-tunnel.service"
+install -m 0600 "$TUNNEL_CONFIG" "$TESSERACT_CONFIG_DIR/tesseract-web-tunnel.yml"
 systemctl --user daemon-reload
 
 echo "installed=tesseract-web-production.service"
+echo "installed=tesseract-web-tunnel.service"
+echo "installed=$TESSERACT_CONFIG_DIR/tesseract-web-tunnel.yml"
 echo "services remain disabled and stopped"

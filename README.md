@@ -125,20 +125,24 @@ bin/remove-worktree.sh my-feature
 ## Production
 
 On tars, production runs as two systemd user services: Rails/Solid Queue and a
-separate Cloudflare Tunnel. Install the unit files without starting them:
+separate, path-restricted Cloudflare Tunnel for external webhooks. Install the
+unit files and tunnel ingress configuration without starting them:
 
 ```sh
 bin/install-production-services
 ```
 
-Store the dedicated tunnel credentials under `~/.config/tesseract/` with mode
-`0600`, and point `tesseract-web-tunnel.yml` at that credential file and the
-loopback Rails origin. Start Rails first, verify `http://127.0.0.1:6001/up`,
-and only then start the tunnel:
+Store the dedicated tunnel credentials at
+`~/.config/tesseract/tesseract-web-tunnel-credentials.json` with mode `0600`.
+The UI is served directly over TLS at
+`https://tesseract-web.tars.achan.bot:6100`; the tunnel exposes only the signed
+Slack and GitHub webhook routes at `https://tesseract-hooks.achan.bot`. Start
+Rails first, verify its TLS listener, and only then start the tunnel:
 
 ```sh
 systemctl --user start tesseract-web-production.service
-curl --fail http://127.0.0.1:6001/up
+curl --fail --resolve tesseract-web.tars.achan.bot:6100:127.0.0.1 \
+  https://tesseract-web.tars.achan.bot:6100/up
 systemctl --user start tesseract-web-tunnel.service
 ```
 
@@ -149,8 +153,8 @@ restarts and cloudflared runs independently.
 ### Starting the server
 
 `bin/prod` runs the Rails server in production mode with Solid Queue embedded
-in Puma. It binds to `127.0.0.1:6001` by default and leaves public ingress to
-the separately supervised tunnel service.
+in Puma. It binds with TLS to port `6100` by default. The separately supervised
+tunnel service forwards only allowlisted webhook paths to that listener.
 
 ```sh
 bin/prod
@@ -176,7 +180,7 @@ precompiles assets, runs migrations, and restarts puma via
    ```
 
 2. In your GitHub repo, go to **Settings > Webhooks > Add webhook**:
-   - **Payload URL:** `https://<your-tunnel-host>/api/deploy`
+   - **Payload URL:** `https://tesseract-hooks.achan.bot/api/deploy`
    - **Content type:** `application/json`
    - **Secret:** the value of `GITHUB_WEBHOOK_SECRET` from step 1
    - **Events:** "Just the push event"
