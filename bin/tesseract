@@ -255,7 +255,7 @@ start_worktree() {
   tmux new-session -d -s "$session" -n main -c "$path"
   tmux send-keys -t "$session":main "pwd" C-m
   tmux split-window -h -t "$session":main -c "$path"
-  tmux send-keys -t "$session":main.1 "codex --yolo" C-m
+  tmux send-keys -t "$session":main.1 "TESSERACT_LIVE_ACTIVITY_APP=$APP_ID codex --yolo" C-m
   tmux new-window -t "$session" -n services -c "$path"
   tmux set-window-option -t "$session":services remain-on-exit on
   tmux send-keys -t "$session":services "$web_command" C-m
