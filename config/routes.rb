@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   resources :overviews, only: :create
   resources :live_activities, only: :destroy
   resources :slack_replies, only: :create
+  resources :remote_control_sessions, only: [:create, :destroy]
 
   namespace :api do
     post "slack/events", to: "slack_events#create"
@@ -42,6 +43,13 @@ Rails.application.routes.draw do
         post :start
         post :progress
         post :stop
+      end
+    end
+
+    resources :remote_control_sessions, only: [] do
+      member do
+        post :started
+        post :ended
       end
     end
   end
