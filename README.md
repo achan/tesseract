@@ -8,7 +8,7 @@ A single Slack app is installed into each workspace. User tokens
 (`xoxp-`) give visibility into public channels, private channels, and
 group DMs without needing bot invitations. Incoming events are stored
 in SQLite, then a background job summarizes activity and extracts
-action items using Claude.
+action items using Codex.
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for full design details,
 database schema, and API documentation.
@@ -53,6 +53,7 @@ into your `.env.local`.
 
 - Ruby 3.4.2
 - SQLite
+- [Codex CLI](https://learn.chatgpt.com/docs/cli), authenticated with `codex login`
 - tmux (for the worktree dev environment)
 - [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) (for receiving Slack webhooks)
 

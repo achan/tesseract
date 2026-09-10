@@ -1,4 +1,6 @@
 class GenerateOverviewJob < ApplicationJob
+  OUTPUT_SCHEMA = Rails.root.join("config/codex/overview.schema.json").freeze
+
   queue_as :default
 
   def perform(profile_id: nil)
@@ -40,15 +42,15 @@ class GenerateOverviewJob < ApplicationJob
 
     prompt = build_prompt(grouped_by_channel, user_names)
 
-    update_live_activity(subtitle: "Calling Claude...")
+    update_live_activity(subtitle: "Calling Codex...")
 
-    result_text = call_claude(prompt)
+    result_text = CodexClient.call(prompt, output_schema: OUTPUT_SCHEMA)
     parsed = extract_json(result_text)
 
     Overview.create!(
       summary: parsed["summary"].presence,
       body: parsed["details"] || result_text,
-      model_used: "claude-cli",
+      model_used: "codex-cli",
       profile: @profile
     )
 
@@ -56,17 +58,6 @@ class GenerateOverviewJob < ApplicationJob
   end
 
   private
-
-  def call_claude(prompt)
-    output, status = Open3.capture2(
-      { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
-      "claude", "-p",
-      "--output-format", "text",
-      stdin_data: prompt
-    )
-    raise "claude CLI failed (exit #{status.exitstatus}): #{output}" unless status.success?
-    output.strip
-  end
 
   def resolve_user_names(events)
     workspace = @profile ? @profile.workspaces.first : Workspace.first

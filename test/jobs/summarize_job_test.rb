@@ -1,6 +1,25 @@
 require "test_helper"
 
 class SummarizeJobTest < ActiveSupport::TestCase
+  test "creates a summary using Codex" do
+    workspace = workspaces(:one)
+    workspace.update!(user_token: nil)
+
+    assert_difference "Summary.count", 1 do
+      CodexClient.stub(:call, "The team discussed project updates.") do
+        SummarizeJob.perform_now(
+          workspace_id: workspace.id,
+          channel_id: "C_GENERAL",
+          period_start: 1.day.ago,
+          period_end: 1.day.from_now
+        )
+      end
+    end
+
+    summary = Summary.find_by!(model_used: "codex-cli")
+    assert_equal "The team discussed project updates.", summary.summary_text
+  end
+
   test "groups events by thread" do
     channel = slack_channels(:general)
     job = SummarizeJob.new

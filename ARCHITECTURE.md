@@ -155,7 +155,7 @@ LLM-generated digests for a channel over a time window.
 | `period_start`     | datetime      | Start of summarized window         |
 | `period_end`       | datetime      | End of summarized window           |
 | `summary_text`     | text          | Generated summary                  |
-| `model_used`       | text          | e.g. `claude-sonnet-4-5-20250929`  |
+| `model_used`       | text          | e.g. `codex-cli`                    |
 | `created_at`       | datetime      | Default `now()`                    |
 
 ### `action_items`
@@ -199,7 +199,7 @@ Responsibilities:
 Responsibilities:
 1. Query `events` for a time window (e.g. last 24h) per active channel.
 2. Group messages by channel and thread.
-3. Call Claude API with a summarization + action-item-extraction prompt.
+3. Call Codex CLI with a summarization + action-item-extraction prompt.
 4. Write results to `summaries` and `action_items` tables.
 
 ### 3. `CleanupJob` — Stale Data Purge
@@ -251,7 +251,7 @@ requests to `localhost`. Keep the tunnel running whenever the server is active.
 5. Slack app creation + install into one test workspace
 6. Verify events flow into the database
 7. Channel config + filtering logic
-8. `SummarizeJob` with Claude API
+8. `SummarizeJob` with Codex CLI
 9. Action items extraction
 10. `CleanupJob` (solid_queue recurring, nightly)
 11. cloudflared tunnel setup + Slack request URL config
