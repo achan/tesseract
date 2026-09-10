@@ -1,4 +1,6 @@
 class GenerateActionItemsJob < ApplicationJob
+  OUTPUT_SCHEMA = Rails.root.join("config/codex/action_items.schema.json").freeze
+
   queue_as :default
 
   def perform(slack_event_id:)
@@ -26,9 +28,9 @@ class GenerateActionItemsJob < ApplicationJob
     grouped = group_by_thread(events)
     prompt = build_prompt(grouped, channel)
 
-    update_live_activity(subtitle: "##{channel.channel_name} — Calling Claude...")
+    update_live_activity(subtitle: "##{channel.channel_name} — Calling Codex...")
 
-    result_text = call_claude(prompt)
+    result_text = CodexClient.call(prompt, output_schema: OUTPUT_SCHEMA)
     parsed = extract_json(result_text)
 
     items = parsed["action_items"] || []
@@ -49,17 +51,6 @@ class GenerateActionItemsJob < ApplicationJob
   end
 
   private
-
-  def call_claude(prompt)
-    output, status = Open3.capture2(
-      { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
-      "claude", "-p",
-      "--output-format", "text",
-      stdin_data: prompt
-    )
-    raise "claude CLI failed (exit #{status.exitstatus}): #{output}" unless status.success?
-    output.strip
-  end
 
   def group_by_thread(events)
     threads = {}

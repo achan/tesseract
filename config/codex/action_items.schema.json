@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": { "type": ["string", "null"] },
+          "assignee": { "type": ["string", "null"] },
+          "source_ts": { "type": "string" },
+          "priority": { "type": "integer", "minimum": 1, "maximum": 5 }
+        },
+        "required": ["description", "assignee", "source_ts", "priority"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["action_items"],
+  "additionalProperties": false
+}

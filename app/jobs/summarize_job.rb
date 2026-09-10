@@ -25,33 +25,22 @@ class SummarizeJob < ApplicationJob
     grouped = group_by_thread(events)
     prompt = build_prompt(grouped, channel)
 
-    update_live_activity(subtitle: "Calling Claude...")
+    update_live_activity(subtitle: "Calling Codex...")
 
-    summary_text = call_claude(prompt)
+    summary_text = CodexClient.call(prompt)
 
     Summary.create!(
       source: channel,
       period_start: period_start,
       period_end: period_end,
       summary_text: summary_text,
-      model_used: "claude-cli"
+      model_used: "codex-cli"
     )
 
     stop_live_activity
   end
 
   private
-
-  def call_claude(prompt)
-    output, status = Open3.capture2(
-      { "CLAUDECODE" => nil, "ANTHROPIC_API_KEY" => nil },
-      "claude", "-p",
-      "--output-format", "text",
-      stdin_data: prompt
-    )
-    raise "claude CLI failed (exit #{status.exitstatus}): #{output}" unless status.success?
-    output.strip
-  end
 
   def group_by_thread(events)
     threads = {}
