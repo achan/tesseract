@@ -1,12 +1,5 @@
-<%= turbo_stream_from "dashboard_live_activities" %>
 <%= turbo_stream_from "dashboard_action_items" %>
 <%= turbo_stream_from "dashboard_overview" %>
-
-<div id="dashboard_live_activities" class="overflow-x-auto pb-2 whitespace-nowrap mb-6 px-8">
-  <% @live_activities.each do |activity| %>
-    <%= render "dashboard/live_activity", live_activity: activity %>
-  <% end %>
-</div>
 
 <div data-controller="item-count">
   <h2 class="text-xl font-semibold mb-4 px-8"><%= link_to "Action Items", action_items_path, class: "hover:underline" %><span data-item-count-target="count"><%= " (#{@action_items.size})" if @action_items.any? %></span></h2>

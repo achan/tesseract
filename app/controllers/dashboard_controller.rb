@@ -2,8 +2,6 @@ class DashboardController < ApplicationController
   ITEMS_PER_PAGE = 50
 
   def index
-    @live_activities = LiveActivity.visible
-
     @action_items = ActionItem
       .active
       .where(status: ActionItem::DASHBOARD_STATUSES)
